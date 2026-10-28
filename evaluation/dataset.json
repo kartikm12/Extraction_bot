@@ -1,0 +1,95 @@
+[
+  {
+    "fixture_file": "scenario_1_normal_tender.pdf",
+    "description": "Standard government IT infrastructure tender (TSTS)",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "TSTS/HW/2026/089", "expected_pages": [1]},
+      "authority": {"value_contains": "Telangana State Technology Services", "expected_pages": [1, 2]},
+      "objective": {"value_contains": "IT Infrastructure for District Collectorates", "expected_pages": [1]},
+      "core_scope": {"value_contains": "500 Desktop Computers", "expected_pages": [2]},
+      "implementation": {"value_contains": "4 weeks", "expected_pages": [2]},
+      "om": {"value_contains": "3 years", "expected_pages": [2]},
+      "selection": {"value_contains": "Least Cost System (L1)", "expected_pages": [2]},
+      "consortium": {"value_contains": "prohibited", "expected_pages": [2]},
+      "bid_dates": {"value_contains": "24-Nov-2026", "expected_pages": [1]},
+      "emd": {"value_contains": "9,00,000", "expected_pages": [1]},
+      "performance_security": {"value_contains": "10%", "expected_pages": [2]},
+      "indicative_value": {"value_contains": "4,50,00,000", "expected_pages": [1]}
+    },
+    "expected_has_conflict": false,
+    "expected_missing_keys": []
+  },
+  {
+    "fixture_file": "scenario_4_word_tender.docx",
+    "description": "State power distribution tender in Microsoft Word format (TSNPDCL)",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "TSNPDCL/CGM/2026/05", "expected_pages": [1]},
+      "authority": {"value_contains": "TSNPDCL", "expected_pages": [1]},
+      "objective": {"value_contains": "Power Transformers", "expected_pages": [1]},
+      "core_scope": {"value_contains": "25 Units", "expected_pages": [1]},
+      "implementation": {"value_contains": "8 weeks", "expected_pages": [1]},
+      "om": {"value_contains": "5 years", "expected_pages": [1]},
+      "selection": {"value_contains": "L1", "expected_pages": [1]},
+      "consortium": {"value_contains": "prohibited", "expected_pages": [1]},
+      "bid_dates": {"value_contains": "28-Nov-2026", "expected_pages": [1]},
+      "emd": {"value_contains": "12,50,000", "expected_pages": [1]},
+      "performance_security": {"value_contains": "10%", "expected_pages": [1]},
+      "indicative_value": {"value_contains": "6,25,00,000", "expected_pages": [1]}
+    },
+    "expected_has_conflict": false,
+    "expected_missing_keys": []
+  },
+  {
+    "fixture_file": "scenario_5_missing_parameters.pdf",
+    "description": "Consultancy tender with intentionally missing parameters",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "DMA/CONSULT/2026/09", "expected_pages": [1]},
+      "authority": {"value_contains": "Directorate of Municipal Administration", "expected_pages": [1]},
+      "objective": {"value_contains": "urban sanitation", "expected_pages": [1]},
+      "core_scope": {"value_contains": "Detailed Project Report", "expected_pages": [1]},
+      "implementation": {"value_contains": "12 weeks", "expected_pages": [1]},
+      "om": {"value_exact": "—", "expected_pages": []},
+      "selection": {"value_contains": "QCBS", "expected_pages": [1]},
+      "consortium": {"value_exact": "—", "expected_pages": []},
+      "bid_dates": {"value_contains": "14-Nov-2026", "expected_pages": [1]},
+      "emd": {"value_exact": "—", "expected_pages": []},
+      "performance_security": {"value_exact": "—", "expected_pages": []},
+      "indicative_value": {"value_exact": "—", "expected_pages": []}
+    },
+    "expected_has_conflict": false,
+    "expected_missing_keys": ["om", "consortium", "emd", "performance_security", "indicative_value"]
+  },
+  {
+    "fixture_file": "scenario_6_conflicting_implementation.pdf",
+    "description": "Regression tender with conflicting implementation timelines (2 weeks vs 3 weeks)",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "TPHC/ENG/2026/033", "expected_pages": [1]},
+      "authority": {"value_contains": "Telangana Police Housing Corporation", "expected_pages": [1]},
+      "objective": {"value_contains": "Modular Workstations", "expected_pages": [1]},
+      "implementation": {"value_contains": "CONFLICT", "expected_pages": [2, 4]}
+    },
+    "expected_has_conflict": true,
+    "conflict_parameter": "implementation"
+  },
+  {
+    "fixture_file": "scenario_7_conflicting_bid_dates.pdf",
+    "description": "CPWD tender with conflicting bid closing deadlines across sections",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "CPWD/NZ/2026/512", "expected_pages": [1]},
+      "bid_dates": {"value_contains": "CONFLICT", "expected_pages": [1, 2]}
+    },
+    "expected_has_conflict": true,
+    "conflict_parameter": "bid_dates"
+  },
+  {
+    "fixture_file": "scenario_8_multiple_financial_amounts.pdf",
+    "description": "Rate contract with multiple prices and turnover that must not be confused with indicative value",
+    "expected_parameters": {
+      "tender_no": {"value_contains": "IRCTC/CAT/2026/78", "expected_pages": [1]},
+      "authority": {"value_contains": "Indian Railway Catering", "expected_pages": [1]},
+      "indicative_value": {"value_exact": "—", "expected_pages": []}
+    },
+    "expected_has_conflict": false,
+    "expected_missing_keys": ["indicative_value"]
+  }
+]
