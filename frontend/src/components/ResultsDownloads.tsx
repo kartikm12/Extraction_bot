@@ -306,9 +306,6 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.02em' }}>
             {parameters.authority?.final_value || parameters.authority?.extracted_value || 'TENDER ANALYSIS & EXECUTIVE SUMMARY'}
           </h2>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
-            Source File: {record.original_filename} • Reference ID: {record.document_id}
-          </div>
         </div>
 
         {/* 12-Parameter Table Preview */}
