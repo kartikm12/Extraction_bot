@@ -118,3 +118,4 @@ def test_scenario_15_retry_and_idempotency(tmp_path):
     params2 = extraction_engine.extract_parameters(doc2)
     assert params1["tender_no"].extracted_value == params2["tender_no"].extracted_value
     assert params1["authority"].extracted_value == params2["authority"].extracted_value
+

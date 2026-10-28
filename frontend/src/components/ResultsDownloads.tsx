@@ -303,8 +303,8 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #1e3a8a', paddingBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.03em' }}>
-            TENDER ANALYSIS & EXECUTIVE SUMMARY
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.02em' }}>
+            {parameters.authority?.final_value || parameters.authority?.extracted_value || 'TENDER ANALYSIS & EXECUTIVE SUMMARY'}
           </h2>
           <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
             Source File: {record.original_filename} • Reference ID: {record.document_id}
@@ -315,11 +315,11 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
           <thead>
             <tr style={{ backgroundColor: '#1e3a8a', color: '#ffffff', textAlign: 'left' }}>
-              <th style={{ padding: '0.75rem 1rem', width: '28%', border: '1px solid #1e3a8a' }}>
-                Parameter
+              <th style={{ padding: '0.75rem 1rem', width: '28%', border: '1px solid #1e3a8a', letterSpacing: '0.04em' }}>
+                PARAMETER
               </th>
-              <th style={{ padding: '0.75rem 1rem', width: '72%', border: '1px solid #1e3a8a' }}>
-                Extracted Tender Details & Obligations
+              <th style={{ padding: '0.75rem 1rem', width: '72%', border: '1px solid #1e3a8a', letterSpacing: '0.04em' }}>
+                DETAILS
               </th>
             </tr>
           </thead>
@@ -352,7 +352,8 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
                     color: isMissing ? '#94a3b8' : '#0f172a',
                     border: '1px solid #e2e8f0',
                     verticalAlign: 'top',
-                    lineHeight: 1.45,
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-line',
                   }}>
                     {isConflict && (
                       <div style={{ color: '#c2410c', fontWeight: 700, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
@@ -360,11 +361,6 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
                       </div>
                     )}
                     <div>{val}</div>
-                    {param?.source_pages && param.source_pages.length > 0 && !isMissing && (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic', marginTop: '0.25rem' }}>
-                        (Page: {param.source_pages.join(', ')})
-                      </div>
-                    )}
                   </td>
                 </tr>
               );
@@ -385,3 +381,4 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
     </div>
   );
 };
+

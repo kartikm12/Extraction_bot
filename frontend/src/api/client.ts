@@ -75,3 +75,4 @@ export const apiClient = {
     return `${API_BASE}/tenders/${documentId}/download/json`;
   },
 };
+

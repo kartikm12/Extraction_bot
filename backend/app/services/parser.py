@@ -214,3 +214,4 @@ class DocumentParser:
             pages.append(ParsedPage(page_number=1, text=""))
 
         return ParsedDocument(filename=file_path.name, file_type="docx", pages=pages)
+

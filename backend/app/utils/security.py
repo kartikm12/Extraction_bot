@@ -57,3 +57,4 @@ def scan_for_prompt_injection(text: str) -> Tuple[bool, Optional[str]]:
         if match:
             return True, f"Suspicious instruction detected in document: '{match.group(0)}'"
     return False, None
+

@@ -157,3 +157,4 @@ class DashboardStats(BaseModel):
     with_conflicts: int
     with_failures: int
     recent_history: List[Dict[str, Any]] = Field(default_factory=list)
+

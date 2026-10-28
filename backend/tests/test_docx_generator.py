@@ -45,3 +45,4 @@ def test_generate_docx_report(tmp_path):
     # Check that Key Officials is NOT present anywhere
     full_docx_text = "\n".join([p.text for p in doc.paragraphs] + [c.text for r in table.rows for c in r.cells])
     assert "Key Officials" not in full_docx_text
+

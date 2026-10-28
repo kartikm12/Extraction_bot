@@ -67,3 +67,4 @@ def test_supersession_detection():
         for c in conflicts:
             if c.parameter_key == ParameterKey.IMPLEMENTATION:
                 assert c.supersession_detected is True
+

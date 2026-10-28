@@ -69,3 +69,4 @@ class OCREngine:
             return "", "Failed", f"Page {page_num}: OCR error ({str(e)}). Human review required."
 
 ocr_engine = OCREngine()
+

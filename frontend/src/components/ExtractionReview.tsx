@@ -505,3 +505,4 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
     </div>
   );
 };
+

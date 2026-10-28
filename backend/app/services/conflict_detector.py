@@ -96,8 +96,8 @@ class ConflictDetectionEngine:
 
             # Look for delivery/installation duration clauses
             patterns = [
-                r'((?:delivery|installation|commissioning|implementation|supply)[^\.\n;]{0,50}(?:within|period\s*of)\s*(\d+)\s*(weeks?|days?|months?)[^\.\n;]{0,60}(?:Purchase\s*Order|PO|award|contract)?)',
-                r'((\d+)\s*(weeks?|days?|months?)\s*(?:from|after)\s*(?:the\s*)?(?:date\s*of\s*)?(?:Purchase\s*Order|PO|award|LOA|signing|contract)[^\.\n;]*)',
+                r'((?:delivery|installation|commissioning|implementation|supply)[^\.\n;]{0,60}(?:within|period\s*of)\s*(\d+)\s*(weeks?|days?|months?)[^\.\n;]{0,60}(?:Purchase\s*Order|PO|award|contract)?)',
+                r'((?:delivery|installation|commissioning|implementation)[^\.\n;]{0,40}(?:within\s*)?(\d+)\s*(weeks?|days?|months?)\s*(?:from|after)\s*(?:the\s*)?(?:date\s*of\s*)?(?:Purchase\s*Order|PO|award|LOA|signing|contract)[^\.\n;]*)',
                 r'((?:delivery|installation)\s*(?:within|period)?\s*[:\s-]*(\d+)\s*(weeks?|days?|months?)[^\.\n;]*)'
             ]
 
@@ -185,13 +185,21 @@ class ConflictDetectionEngine:
 
         for page in doc.pages:
             text = page.text
-            matches = re.finditer(r'(?:EMD|Earnest\s*Money\s*Deposit|Bid\s*Security)\s*[:\.\s-]*(?:is\s*)?(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore))?)', text, re.I)
+            # Only match actual monetary amounts after EMD / Earnest Money / Bid Security
+            matches = re.finditer(r'\b(?:EMD|Earnest\s*Money\s*Deposit|Bid\s*Security)\b\s*(?:amount|schedule)?\s*[:\.\s-]*(?:is\s*)?(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore))?)', text, re.I)
             for m in matches:
                 amt = m.group(1).strip()
+                digits_only = re.sub(r'[^\d]', '', amt)
+                if not (len(digits_only) >= 3 or re.search(r'lakh|crore', amt, re.I)):
+                    continue
+                s_idx = max(0, m.start() - 40)
+                e_idx = min(len(text), m.end() + 60)
+                surrounding = text[s_idx:e_idx].lower()
+                if re.search(r'forfeiture\s*of|refund\s*of', surrounding) and not re.search(r'₹|rs|inr|lakh|crore', m.group(0), re.I):
+                    continue
+
                 if amt not in seen_amounts and amt not in ["", "0"]:
                     seen_amounts.add(amt)
-                    s_idx = max(0, m.start() - 40)
-                    e_idx = min(len(text), m.end() + 60)
                     emd_statements.append(ConflictStatement(
                         value=m.group(0).strip(),
                         source_page=page.page_number,
@@ -340,3 +348,4 @@ class ConflictDetectionEngine:
         return False, None
 
 conflict_detector = ConflictDetectionEngine()
+

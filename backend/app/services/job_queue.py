@@ -133,3 +133,4 @@ class DocumentProcessingJob:
             log_audit_action(document_id, "PROCESSING_FAILED", reviewer_comment=str(e))
 
 processing_job = DocumentProcessingJob()
+

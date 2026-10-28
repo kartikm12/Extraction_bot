@@ -48,3 +48,4 @@ def test_indicative_value_not_confused_with_turnover():
     # Must NOT extract turnover as indicative value
     assert "50 Crores" not in extractions["indicative_value"].extracted_value
     assert extractions["indicative_value"].extracted_value == "—"
+

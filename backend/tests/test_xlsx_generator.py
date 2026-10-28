@@ -46,3 +46,4 @@ def test_generate_verification_logs():
     assert audit_data["processing_id"] == "TND-REGRESS"
     assert len(audit_data["parameters"]) == 12
     assert len(audit_data["conflicts"]) >= 1
+

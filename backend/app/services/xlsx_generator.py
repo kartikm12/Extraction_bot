@@ -197,3 +197,4 @@ class VerificationLogGenerator:
         return xlsx_path, json_path
 
 xlsx_generator = VerificationLogGenerator()
+

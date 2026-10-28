@@ -250,3 +250,4 @@ docker run -p 8000:8000 -v $(pwd)/storage:/app/storage tender-bot
 - **File Validation**: Strict file type validation (`.pdf`, `.docx`, `.doc`) and size caps (50MB).
 - **Audit Logging**: Every reviewer action, edit, and approval is recorded with an immutable timestamp and comments.
 - **Idempotency**: Processing retries do not create duplicate records or corrupt reports.
+

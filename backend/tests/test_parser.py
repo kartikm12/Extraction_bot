@@ -36,3 +36,4 @@ def test_parse_mixed_pdf():
     assert not metas[0].is_scanned
     assert metas[1].is_scanned
     assert not metas[2].is_scanned
+
