@@ -206,7 +206,7 @@ export const App: React.FC = () => {
         color: '#64748b',
       }}>
         <div>
-          Tender Analysis and Extraction Bot • Production Release v1.0.0
+          Tender Docs Analysis and Extraction Bot • Production Release v1.0.0
         </div>
         <div style={{ marginTop: '0.2rem', fontSize: '0.75rem', color: '#94a3b8' }}>
           Constrained 12-parameter schema • Deterministic & LLM-Powered Evidence Verification • Audit-Grade Document Intelligence

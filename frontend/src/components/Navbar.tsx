@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             textAlign: 'center',
             userSelect: 'none',
           }}
-          title="Tender Analysis & Extraction Bot Dashboard"
+          title="Tender Docs Analysis & Extraction Bot Dashboard"
         >
           <img
             src="/extraction-bot-logo.png"
@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               lineHeight: 1.25,
               textAlign: 'center',
             }}>
-              Tender Analysis & Extraction Bot
+              Tender Docs Analysis & Extraction Bot
             </div>
             <div style={{
               fontSize: '0.75rem',

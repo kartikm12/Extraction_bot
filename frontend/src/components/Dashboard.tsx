@@ -183,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* KPI Cards Grid - Fitted, aligned, and clickable */}
+      {/* KPI Cards Grid - Fitted, aligned, icon-click navigation */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -195,33 +195,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           return (
             <div
               key={card.id}
-              onClick={() => handleCardClick(card.id)}
               style={{
                 backgroundColor: '#ffffff',
-                padding: '0.85rem 1rem',
+                padding: '0.9rem 1rem',
                 borderRadius: '0.5rem',
-                border: isActive ? `2px solid ${card.activeBorder}` : '1px solid #e2e8f0',
-                boxShadow: isActive ? '0 4px 6px -1px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                border: isActive ? `1.5px solid ${card.activeBorder}` : '1px solid #e2e8f0',
+                boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.06)' : '0 1px 2px rgba(0,0,0,0.04)',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
-                userSelect: 'none',
+                justifyContent: 'flex-start',
               }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.borderColor = card.hoverBorder;
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 8px -2px rgba(0,0,0,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.borderColor = '#e2e8f0';
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = isActive ? '0 4px 6px -1px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)';
-              }}
-              title={`Click to filter tenders by ${card.label}`}
             >
-              {/* Top Row: Title + Uniform Pinned Badge */}
+              {/* Top Row: Title on left, Clickable Icon Badge on right */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -242,21 +227,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {card.label}
                 </span>
 
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  minWidth: '32px',
-                  minHeight: '32px',
-                  borderRadius: '0.375rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  backgroundColor: card.bgColor,
-                  color: card.color,
-                }}>
+                <button
+                  type="button"
+                  onClick={() => handleCardClick(card.id)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    minWidth: '32px',
+                    minHeight: '32px',
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    backgroundColor: card.bgColor,
+                    color: card.color,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isActive ? `0 0 0 2px ${card.color}` : 'none',
+                    outline: 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = isActive ? `0 0 0 2px ${card.color}` : 'none';
+                  }}
+                  title={`Click to filter by ${card.label}`}
+                  aria-label={`Filter tenders by ${card.label}`}
+                >
                   {card.icon}
-                </div>
+                </button>
               </div>
 
               {/* Number Metric */}
@@ -265,7 +269,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 fontWeight: 700,
                 color: '#0f172a',
                 lineHeight: 1.1,
-                marginTop: '0.3rem',
+                marginTop: '0.35rem',
                 marginBottom: '0.2rem',
               }}>
                 {card.count}
@@ -278,22 +282,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 lineHeight: 1.25,
               }}>
                 {card.subtitle}
-              </div>
-
-              {/* Navigation Cue - Snug fit with zero dragging space */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: '0.65rem',
-                paddingTop: '0.45rem',
-                borderTop: '1px solid #f1f5f9',
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                color: isActive ? card.color : '#64748b',
-              }}>
-                <span>{card.actionText}</span>
-                <ArrowRight size={12} style={{ color: isActive ? card.color : '#94a3b8' }} />
               </div>
             </div>
           );
