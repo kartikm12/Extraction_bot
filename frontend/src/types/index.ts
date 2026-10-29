@@ -111,6 +111,7 @@ export interface DashboardStats {
     has_missing_values: boolean;
     requires_human_review: boolean;
     is_fully_verified: boolean;
+    error_message?: string;
     created_at: string;
   }>;
 }

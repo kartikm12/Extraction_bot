@@ -130,10 +130,10 @@ export const App: React.FC = () => {
     fetchStats();
   };
 
-  const handleSelectDocument = (docId: string) => {
+  const handleSelectDocument = (docId: string, preferredTab: 'review' | 'results' = 'review') => {
     setActiveDocId(docId);
     fetchActiveRecord(docId);
-    setCurrentTab('review');
+    setCurrentTab(preferredTab);
   };
 
   return (
