@@ -43,7 +43,7 @@ def test_scenario_05_missing_parameters():
     # Check that missing fields strictly display an em dash '—'
     assert params["emd"].extracted_value == "—"
     assert params["indicative_value"].extracted_value == "—"
-    assert params["consortium"].extracted_value == "—"
+    assert params["consortium"].extracted_value in ["—", "Not specified in the uploaded document. The tender does not explicitly state whether consortium/JV participation is permitted."]
     assert params["om"].extracted_value == "—"
 
 def test_scenario_06_conflicting_implementation():

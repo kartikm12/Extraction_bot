@@ -30,6 +30,14 @@ class EvidenceVerificationEngine:
         return updated_extractions, conflicts
 
     def _verify_parameter(self, doc: ParsedDocument, param: ParameterExtraction):
+        # Case 0: Explicit finding of not specified / absent in document
+        if param.extracted_value.startswith("Not specified in the uploaded document"):
+            param.status = VerificationStatus.VERIFIED
+            param.confidence_score = 1.0
+            param.confidence_indicator = "High"
+            param.review_required = False
+            return
+
         # Case 1: Missing value
         if param.extracted_value == "—" or not param.extracted_value:
             param.extracted_value = "—"

@@ -116,4 +116,27 @@ def test_extract_intermediate_education_tender():
     assert "5%" in extractions["performance_security"].extracted_value
     assert extractions["indicative_value"].extracted_value in ["—", "-"]
 
+def test_extract_igrs_video_conference_tender():
+    upload_path = Path("storage/uploads/TND-52A95E63_3b9f03c9_Tender Document.pdf")
+    if not upload_path.exists():
+        pytest.skip("IGRS tender PDF not found in uploads")
+
+    doc = DocumentParser.parse_document(upload_path)
+    extractions = extraction_engine.extract_parameters(doc)
+
+    assert "TGTS/HWP/054/IGRS-VC/2026" in extractions["tender_no"].extracted_value
+    assert "Registration and Stamps" in extractions["authority"].extracted_value
+    assert "video-conferencing equipment" in extractions["objective"].extracted_value.lower() or "video conference" in extractions["objective"].extracted_value.lower()
+    assert "98-inch 4K display" in extractions["core_scope"].extracted_value or "camera with speaker" in extractions["core_scope"].extracted_value
+    assert "3 weeks" in extractions["implementation"].extracted_value
+    assert "Registration Bhavan" in extractions["implementation"].extracted_value
+    assert "Three-year" in extractions["om"].extracted_value or "3 years" in extractions["om"].extracted_value
+    assert "L1" in extractions["selection"].extracted_value
+    assert "Not specified" in extractions["consortium"].extracted_value
+    assert "22 October 2026" in extractions["bid_dates"].extracted_value or "29 October 2026" in extractions["bid_dates"].extracted_value
+    assert "80,000" in extractions["emd"].extracted_value
+    assert "5%" in extractions["performance_security"].extracted_value
+    assert extractions["indicative_value"].extracted_value == "—"
+
+
 
