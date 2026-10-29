@@ -55,8 +55,8 @@ export const apiClient = {
     return res.json();
   },
 
-  async regenerateReports(documentId: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/tenders/${documentId}/regenerate`, {
+  async regenerateReports(documentId: string, recheck: boolean = true): Promise<any> {
+    const res = await fetch(`${API_BASE}/tenders/${documentId}/regenerate?recheck=${recheck}`, {
       method: 'POST',
     });
     if (!res.ok) throw new Error('Failed to regenerate reports');

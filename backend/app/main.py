@@ -2,6 +2,7 @@ import os
 import shutil
 import uuid
 import asyncio
+import logging
 from pathlib import Path
 from typing import Optional, List
 from datetime import datetime
@@ -20,9 +21,14 @@ from backend.app.models.database import (
     save_document, get_document, get_dashboard_stats, log_audit_action
 )
 from backend.app.services.job_queue import processing_job, subscribe_events
+from backend.app.services.parser import DocumentParser
+from backend.app.services.extractor import extraction_engine
+from backend.app.services.verifier import evidence_verifier
 from backend.app.services.docx_generator import docx_generator
 from backend.app.services.xlsx_generator import xlsx_generator
 from backend.app.utils.security import validate_uploaded_file, sanitize_filename
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -254,10 +260,48 @@ def submit_review(document_id: str, submission: ReviewSubmission):
     return {"message": "Review submitted successfully", "document_id": document_id}
 
 @app.post("/api/tenders/{document_id}/regenerate")
-def regenerate_reports(document_id: str):
+def regenerate_reports(document_id: str, recheck: bool = True):
     record = get_document(document_id)
     if not record:
         raise HTTPException(status_code=404, detail=f"Tender record '{document_id}' not found.")
+
+    ocr_warnings = []
+    # If recheck is enabled, re-read and re-analyze the uploaded document from disk
+    if recheck and record.stored_filename:
+        source_path = settings.UPLOAD_PATH / record.stored_filename
+        if source_path.exists():
+            try:
+                # 1. Re-parse original uploaded document with all pages & tables
+                parsed_doc = DocumentParser.parse_document(source_path)
+                record.page_count = parsed_doc.page_count
+                record.pages_meta = parsed_doc.get_pages_meta()
+                for p in record.pages_meta:
+                    if p.warnings:
+                        ocr_warnings.extend(p.warnings)
+
+                # 2. Re-extract all 12 parameters with extraction engine
+                fresh_extractions = extraction_engine.extract_parameters(parsed_doc)
+
+                # 3. Re-verify all evidence and re-detect conflicts against document text
+                verified_params, detected_conflicts = evidence_verifier.verify_all(parsed_doc, fresh_extractions)
+
+                record.parameters = verified_params
+                record.conflicts = detected_conflicts
+                record.has_conflicts = len(detected_conflicts) > 0
+                record.has_missing_values = any(p.status == VerificationStatus.MISSING for p in verified_params.values())
+
+                needs_review = (
+                    record.has_conflicts or
+                    any(p.status in [VerificationStatus.NEEDS_REVIEW, VerificationStatus.OCR_FAILURE] for p in verified_params.values())
+                )
+                record.requires_human_review = needs_review
+                record.is_fully_verified = not needs_review
+                record.current_stage = ProcessingStage.REPORT_GENERATED
+                record.stage_progress_pct = 100
+                if ProcessingStage.REPORT_GENERATED.value not in record.stages_completed:
+                    record.stages_completed.append(ProcessingStage.REPORT_GENERATED.value)
+            except Exception as e:
+                logger.error(f"Error re-analyzing document {document_id}: {e}", exc_info=True)
 
     # Regenerate Word report (.docx)
     word_path = docx_generator.generate_report(
@@ -271,14 +315,16 @@ def regenerate_reports(document_id: str):
         original_filename=record.original_filename,
         parameters=record.parameters,
         conflicts=record.conflicts,
+        ocr_warnings=ocr_warnings,
         created_at=record.created_at
     )
     record.word_report_path = str(word_path)
     record.verification_xlsx_path = str(xlsx_path)
     record.audit_json_path = str(json_path)
+    record.updated_at = datetime.utcnow()
     save_document(record)
 
-    log_audit_action(document_id, "REPORTS_REGENERATED", reviewer_comment="Reports regenerated following review updates")
+    log_audit_action(document_id, "REPORTS_REGENERATED", reviewer_comment="Uploaded document re-checked and reports regenerated")
 
     broadcast_sync({
         "type": "reports_regenerated",
@@ -286,7 +332,12 @@ def regenerate_reports(document_id: str):
         "timestamp": datetime.utcnow().isoformat()
     })
 
-    return {"message": "Reports regenerated successfully", "document_id": document_id}
+    return {
+        "message": "Reports regenerated successfully with updated document analysis",
+        "document_id": document_id,
+        "is_fully_verified": record.is_fully_verified,
+        "parameters": record.parameters
+    }
 
 @app.get("/api/tenders/{document_id}/download/word")
 def download_word_summary(document_id: str):

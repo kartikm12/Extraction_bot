@@ -31,12 +31,12 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      await apiClient.regenerateReports(record.document_id);
+      await apiClient.regenerateReports(record.document_id, true);
       onRefresh();
       setRegenSuccess(true);
-      setTimeout(() => setRegenSuccess(false), 3000);
+      setTimeout(() => setRegenSuccess(false), 3500);
     } catch (e) {
-      alert('Error regenerating reports');
+      alert('Error re-checking document and regenerating reports');
     } finally {
       setRegenerating(false);
     }
@@ -83,7 +83,7 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {regenSuccess && (
             <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
-              ✓ Reports updated!
+              ✓ Document re-checked & reports regenerated!
             </span>
           )}
 
@@ -101,10 +101,13 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
               fontSize: '0.875rem',
               fontWeight: 500,
               color: '#334155',
+              cursor: regenerating ? 'not-allowed' : 'pointer',
+              opacity: regenerating ? 0.7 : 1,
             }}
+            title="Re-checks the uploaded document, extracts and verifies all 12 parameters afresh, and regenerates Word and Excel reports"
           >
             <RefreshCw size={15} className={regenerating ? 'pulsing' : ''} />
-            {regenerating ? 'Regenerating...' : 'Regenerate Reports'}
+            {regenerating ? 'Re-checking Document & Regenerating...' : 'Regenerate Reports'}
           </button>
 
           <button

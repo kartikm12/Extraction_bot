@@ -7,7 +7,7 @@ from backend.app.main import (
 )
 from backend.app.models.schemas import (
     DocumentProcessingRecord, ProcessingStage, VerificationStatus,
-    ReviewSubmission, ReviewSubmitItem, ParameterKey
+    ReviewSubmission, ReviewSubmitItem, ParameterKey, ParameterExtraction
 )
 from backend.app.models.database import save_document, get_document
 from backend.app.services.job_queue import processing_job
@@ -83,3 +83,53 @@ def test_tender_processing_and_endpoints():
     
     j_resp = download_audit_json(doc_id)
     assert Path(j_resp.path).exists()
+
+def test_regenerate_reports_rechecks_uploaded_document():
+    import shutil
+    from backend.app.config import settings
+    from backend.app.models.database import save_document, get_document
+    
+    doc_id = "TND-REGENCHECK01"
+    sample_pdf = FIXTURES / "scenario_1_normal_tender.pdf"
+    stored_name = f"{doc_id}_scenario_1_normal_tender.pdf"
+    upload_target = settings.UPLOAD_PATH / stored_name
+    shutil.copyfile(sample_pdf, upload_target)
+    
+    # Create record with deliberately outdated/missing parameter
+    rec = DocumentProcessingRecord(
+        document_id=doc_id,
+        original_filename="scenario_1_normal_tender.pdf",
+        stored_filename=stored_name,
+        file_type="pdf",
+        file_size_bytes=sample_pdf.stat().st_size,
+        page_count=1,
+        current_stage=ProcessingStage.PARAMETERS_EXTRACTED,
+        stage_progress_pct=50,
+        parameters={
+            "tender_no": ParameterExtraction(
+                parameter_key=ParameterKey.TENDER_NO,
+                display_name="Tender No",
+                extracted_value="—",
+                source_pages=[],
+                exact_supporting_text="",
+                status=VerificationStatus.MISSING,
+                confidence_score=0.1,
+                confidence_indicator="Low",
+                conflict_status=False
+            )
+        }
+    )
+    save_document(rec)
+    
+    # Calling regenerate_reports with recheck=True must re-read uploaded file and extract properly
+    res = regenerate_reports(doc_id, recheck=True)
+    assert res["document_id"] == doc_id
+    
+    updated_rec = get_document(doc_id)
+    assert updated_rec is not None
+    # Must have re-extracted Tender No from uploaded file
+    assert "TSTS/HW/2026/089" in updated_rec.parameters["tender_no"].extracted_value
+    assert updated_rec.parameters["tender_no"].status == VerificationStatus.VERIFIED
+    assert len(updated_rec.parameters) == 12
+    assert Path(updated_rec.word_report_path).exists()
+    assert Path(updated_rec.verification_xlsx_path).exists()

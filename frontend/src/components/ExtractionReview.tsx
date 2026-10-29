@@ -27,6 +27,23 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [selectedConflict, setSelectedConflict] = useState<ConflictDetail | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('✓ Changes saved & reports regenerated!');
+  const [rechecking, setRechecking] = useState(false);
+
+  const handleRecheckDocument = async () => {
+    setRechecking(true);
+    try {
+      await apiClient.regenerateReports(record.document_id, true);
+      onRefresh();
+      setSuccessMessage('✓ Uploaded document re-checked & reports regenerated!');
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } catch (e) {
+      alert('Error re-checking document with original source file.');
+    } finally {
+      setRechecking(false);
+    }
+  };
 
   const parameters = record.parameters || {};
 
@@ -39,7 +56,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
         reviewer_comment: reviewerComments[paramKey] || 'Approved by reviewer',
       }];
       await apiClient.submitReview(record.document_id, items);
-      await apiClient.regenerateReports(record.document_id);
+      await apiClient.regenerateReports(record.document_id, false);
       onRefresh();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -59,7 +76,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
         reviewer_comment: reviewerComments[paramKey] || 'Flagged for procurement officer review',
       }];
       await apiClient.submitReview(record.document_id, items);
-      await apiClient.regenerateReports(record.document_id);
+      await apiClient.regenerateReports(record.document_id, false);
       onRefresh();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -86,7 +103,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
         reviewer_comment: reviewerComments[paramKey] || 'Corrected by reviewer',
       }];
       await apiClient.submitReview(record.document_id, items);
-      await apiClient.regenerateReports(record.document_id);
+      await apiClient.regenerateReports(record.document_id, false);
       setEditingParam(null);
       onRefresh();
       setSaveSuccess(true);
@@ -121,9 +138,33 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {saveSuccess && (
             <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
-              ✓ Changes saved & reports regenerated!
+              {successMessage}
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={handleRecheckDocument}
+            disabled={rechecking || submitting}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.55rem 1rem',
+              backgroundColor: '#ffffff',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: rechecking ? 'not-allowed' : 'pointer',
+              opacity: rechecking ? 0.7 : 1,
+            }}
+            title="Re-check the original uploaded document, re-extract and verify all 12 parameters"
+          >
+            <RefreshCw size={15} className={rechecking ? 'pulsing' : ''} />
+            {rechecking ? 'Re-checking Document...' : 'Re-check Document'}
+          </button>
 
           <button
             onClick={onProceedToResults}
