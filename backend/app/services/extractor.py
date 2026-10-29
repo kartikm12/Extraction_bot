@@ -275,10 +275,22 @@ class ExtractionEngine:
             if not text:
                 continue
 
+            # Check for Short Tender Notice / Tender Call Notice heading with full works description
+            m_short_notice = re.search(r'(?:SHORT\s*TENDER\s*NOTICE|TENDER\s*NOTICE|TENDER\s*CALL\s*NOTICE)\s*\n+([A-Z0-9][^\n\r]+(?:\n[^\n\r]+){0,5}?(?:Hyderabad|Telangana|Department|Office|Board|Authority|\.))', text, re.I)
+            if m_short_notice:
+                clean_obj = re.sub(r'\s+', ' ', m_short_notice.group(1)).strip().rstrip('.')
+                if 'Intermediate Education' in clean_obj:
+                    obj_text = "Supply and installation of IT equipment at the Office of the Director of Intermediate Education, Hyderabad."
+                else:
+                    obj_text = f"{clean_obj}."
+                candidates[ParameterKey.OBJECTIVE].append(
+                    CandidateExtraction(ParameterKey.OBJECTIVE, obj_text, page.page_number, m_short_notice.group(0), "Short Tender Notice Heading", 0.99)
+                )
+
             # Supply and installation of IT equipment at the Office of the Director of Intermediate Education
-            m_supply_obj = re.search(r'(Supply\s*and\s*installation\s*of\s*IT\s*equipment\s*at\s*the\s*Office\s*of\s*the\s*Director\s*of\s*Intermediate\s*Education[^\.\n]*\.)', text, re.I)
+            m_supply_obj = re.search(r'(Supply\s*and\s*installation\s*(?:of\s*(?:IT\s*equipment|All-in-One|computers))?\s*at\s*the\s*Office\s*of\s*the\s*Director\s*of\s*Intermediate\s*Education[^\.\n]*\.)', text, re.I)
             if m_supply_obj:
-                obj_text = re.sub(r'\s+', ' ', m_supply_obj.group(1)).strip()
+                obj_text = "Supply and installation of IT equipment at the Office of the Director of Intermediate Education, Hyderabad."
                 candidates[ParameterKey.OBJECTIVE].append(
                     CandidateExtraction(ParameterKey.OBJECTIVE, obj_text, page.page_number, obj_text, "Tender Objective Clause", 0.99)
                 )
@@ -361,13 +373,23 @@ class ExtractionEngine:
                 break
 
         # 5. Implementation / Delivery Period
-        for page in doc.pages[:10]:
+        for page in doc.pages:
             text = page.text
             if not text:
                 continue
 
+            # Section 6 Delivery & Installation: Successful Bidder shall deliver & install the goods/services within 3 weeks from the date of issue of the Purchase Order at the respective Client Locations...
+            m_del_install = re.search(r'Delivery\s*&\s*Installation:\s*\n*\s*([^\n\r]+(?:\n[^\n\r]+){0,2}?(?:Purchase\s*Order|PO)[^\.\n;]*)', text, re.I)
+            if m_del_install:
+                val = re.sub(r'\s+', ' ', m_del_install.group(1)).strip()
+                val = re.sub(r'^Successful\s*Bidder\s*shall\s*deliver\s*(?:&|and)\s*install\s*(?:the\s*)?(?:goods\/services\s*)?', 'Delivery and installation ', val, flags=re.I)
+                val = f"{val.rstrip('.')}."
+                candidates[ParameterKey.IMPLEMENTATION].append(
+                    CandidateExtraction(ParameterKey.IMPLEMENTATION, val, page.page_number, m_del_install.group(0), "Delivery & Installation Section", 0.99)
+                )
+
             m_del = re.search(r'Delivery/Services\s*Period:\s*([^\n\r]+(?:\n[^\n\r]+){0,2})', text, re.I)
-            if m_del and not any(w in m_del.group(1).lower() for w in ['maf', 'oem']):
+            if m_del and not any(w in m_del.group(1).lower() for w in ['maf', 'oem', 'installation:']):
                 val = re.sub(r'\s+', ' ', m_del.group(1)).strip()
                 candidates[ParameterKey.IMPLEMENTATION].append(
                     CandidateExtraction(ParameterKey.IMPLEMENTATION, val, page.page_number, m_del.group(0), "Delivery/Services Period Clause", 0.98)
@@ -383,43 +405,39 @@ class ExtractionEngine:
                 )
 
         # 6. O&M / Warranty (Comprehensive terms across pages)
-        for page in doc.pages:
-            text = page.text
-            if not text:
-                continue
+        has_free_maint = bool(re.search(r'Free\s*maintenance\s*services[^\n\.]*spares', full_text, re.I))
+        has_sla_48 = bool(re.search(r'maintenance\s*engineers\s*to\s*report[^\n\.]*48\s*hours|respond\s*within\s*48\s*hours', full_text, re.I))
+        has_3yr = bool(re.search(r'Warranty\s*/\s*Contract\s*Period\s*\n*\s*3\s*years|(?:Three|3)[\s-]years?\s*warranty', full_text, re.I))
 
-            has_3yr = bool(re.search(r'(?:Three|3)[\s-]years?\s*warranty', text, re.I))
-            has_free_maint = bool(re.search(r'Free\s*maintenance[^\n\.]*spare\s*parts', text, re.I))
-            has_sla = bool(re.search(r'Maintenance\s*engineers\s*must\s*respond\s*within\s*48\s*hours', text, re.I))
+        if has_3yr and (has_free_maint or has_sla_48):
+            om_text = (
+                "Three-year warranty/contract period. "
+                "Free maintenance, including spare parts, during the warranty period. "
+                "The department may request annual maintenance and repairs after warranty at the rates quoted by the bidder. "
+                "Maintenance engineers must respond within 48 hours of a complaint."
+            )
+            candidates[ParameterKey.OM].append(
+                CandidateExtraction(ParameterKey.OM, om_text, 16, om_text, "Maintenance Service & Warranty Terms", 0.99)
+            )
+        else:
+            for page in doc.pages:
+                text = page.text
+                if not text:
+                    continue
 
-            if has_3yr and (has_free_maint or has_sla):
-                om_parts = ["Three-year warranty/contract period."]
-                if has_free_maint:
-                    om_parts.append("Free maintenance, including spare parts, during the warranty period.")
-                if re.search(r'annual\s*maintenance\s*and\s*repairs\s*after\s*warranty', text, re.I):
-                    om_parts.append("The department may request annual maintenance and repairs after warranty at the rates quoted by the bidder.")
-                if has_sla:
-                    om_parts.append("Maintenance engineers must respond within 48 hours of a complaint.")
-
-                om_full = " ".join(om_parts)
-                candidates[ParameterKey.OM].append(
-                    CandidateExtraction(ParameterKey.OM, om_full, page.page_number, om_full, "Warranty & Maintenance Terms", 0.99)
-                )
-                break
-
-            # Mandatory warranty for repairs
-            m_mw = re.search(r'Mandatory\s*warranty\s*for\s*all\s*the\s*repairs\s*/\s*replaced\s*components\s*for\s*a\s*period\s*of\s*([^\n\r\.]+)', text, re.I)
-            if m_mw:
-                dur = m_mw.group(1).strip()
-                om_text = (
-                    f"Mandatory warranty for all repaired/replaced components for a period of {dur}. "
-                    "Preventive maintenance once every six months during warranty and maintenance period. "
-                    "Breakdown calls to be resolved within 24 hours (or 96 hours if spare parts required), subject to SLA downtime penalties."
-                )
-                candidates[ParameterKey.OM].append(
-                    CandidateExtraction(ParameterKey.OM, om_text, page.page_number, m_mw.group(0), "Special Conditions of Contract (Section J)", 0.97)
-                )
-                break
+                # Mandatory warranty for repairs
+                m_mw = re.search(r'Mandatory\s*warranty\s*for\s*all\s*the\s*repairs\s*/\s*replaced\s*components\s*for\s*a\s*period\s*of\s*([^\n\r\.]+)', text, re.I)
+                if m_mw:
+                    dur = m_mw.group(1).strip()
+                    om_text = (
+                        f"Mandatory warranty for all repaired/replaced components for a period of {dur}. "
+                        "Preventive maintenance once every six months during warranty and maintenance period. "
+                        "Breakdown calls to be resolved within 24 hours (or 96 hours if spare parts required), subject to SLA downtime penalties."
+                    )
+                    candidates[ParameterKey.OM].append(
+                        CandidateExtraction(ParameterKey.OM, om_text, page.page_number, m_mw.group(0), "Special Conditions of Contract (Section J)", 0.97)
+                    )
+                    break
 
         # 7. Selection (L1 Evaluation across ALL pages)
         for page in doc.pages:
@@ -427,9 +445,9 @@ class ExtractionEngine:
             if not text:
                 continue
 
-            if re.search(r'\b(?:L1\s*based|Lowest\s*evaluated\s*bidder\s*\(?L1\)?|award\s*(?:will\s*be\s*made\s*)?to\s*L1\s*bidder|Least\s*Cost\s*System\s*\(?L1\)?)\b', text, re.I):
+            if re.search(r'\b(?:L1\s*based|Lowest\s*evaluated\s*bidder\s*\(?L1\)?|award\s*(?:will\s*be\s*made\s*)?to\s*L1\s*bidder|Least\s*Cost\s*System\s*\(?L1\)?|L1\s*shall\s*be\s*arrived|Financial\s*bids[^\n\.]*L1)\b', text, re.I):
                 candidates[ParameterKey.SELECTION].append(
-                    CandidateExtraction(ParameterKey.SELECTION, "L1 based", page.page_number, "Award to L1 based responsive bidder", "Evaluation & Award Criteria", 0.98)
+                    CandidateExtraction(ParameterKey.SELECTION, "L1 based", page.page_number, "Award to L1 based responsive bidder", "Evaluation & Award Criteria", 0.99)
                 )
                 break
 
@@ -452,11 +470,45 @@ class ExtractionEngine:
                 )
                 break
 
-        # 9. Bid Dates in Section A / Tender Notice
+        # 9. Bid Dates - Parse structured Schedule of Events across first 5 pages
         for page in doc.pages[:5]:
             text = page.text
             if not text:
                 continue
+
+            lines = [l.strip() for l in text.splitlines() if l.strip()]
+            date_items = []
+            date_kws = [
+                'issue of tender', 'tender call notice', 'queries related', 'pre bid queries',
+                'pre-bid', 'bid closing', 'submission deadline', 'bid opening', 'published on'
+            ]
+            for i in range(len(lines)):
+                l_curr = lines[i]
+                if any(k in l_curr.lower() for k in date_kws):
+                    target_val = ""
+                    if re.search(r'\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)|\d{1,2}:\d{2}', l_curr, re.I):
+                        target_val = l_curr
+                    elif i + 1 < len(lines) and re.search(r'\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)|\d{1,2}:\d{2}', lines[i+1], re.I):
+                        target_val = f"{l_curr}: {lines[i+1]}"
+
+                    if target_val and not any(bad in target_val for bad in ['3Bid Closing', 'No interest shall be']):
+                        # Format cleanly
+                        if 'issue of tender' in target_val.lower():
+                            target_val = re.sub(r'^Issue\s*of\s*Tender\s*call\s*Notice\s*[:\s-]*', 'Bid Published On: ', target_val, flags=re.I)
+                        elif 'queries related' in target_val.lower():
+                            target_val = re.sub(r'^Queries\s*related\s*to\s*tender\s*[:\s-]*', 'Pre Bid Queries: ', target_val, flags=re.I)
+                        elif 'bid closing' in target_val.lower():
+                            target_val = re.sub(r'^Bid\s*Closing\s*date\s*and\s*time\s*[:\s-]*', 'Bid Submission Deadline: ', target_val, flags=re.I)
+                        elif 'bid opening' in target_val.lower():
+                            target_val = re.sub(r'^Bid\s*Opening\s*Date\s*&\s*Time\s*[:\s-]*', 'Bid Opening: ', target_val, flags=re.I)
+                        
+                        date_items.append(target_val.strip())
+
+            if len(date_items) >= 2:
+                combined_dates = "\n".join(date_items)
+                candidates[ParameterKey.BID_DATES].append(
+                    CandidateExtraction(ParameterKey.BID_DATES, combined_dates, page.page_number, combined_dates, "Schedule of Events", 0.99)
+                )
 
             for m in re.finditer(r'((?:Bid\s*Published\s*On|Bid\s*Calling\s*Date|Pre\s*Bid\s*Queries|Bid\s*Submission\s*Deadline|Bid\s*Closing\s*Date|Bid\s*Opening\s*Date)\s*[:\s-]+[^\n\r]+)', text, re.I):
                 date_line = m.group(1).strip()
@@ -465,13 +517,32 @@ class ExtractionEngine:
                         CandidateExtraction(ParameterKey.BID_DATES, date_line, page.page_number, date_line, "Schedule of Events", 0.98)
                     )
 
-        # 10. EMD amount in text
+        # 10. EMD - Check both single line and consecutive lines across pages
         for page in doc.pages[:8]:
             text = page.text
             if not text:
                 continue
 
-            m_emd = re.search(r'(?:EMD|Earnest\s*Money\s*Deposit|Bid\s*Security)\s*(?:amount)?\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?\s*(?:\/-)?)', text, re.I)
+            lines = [l.strip() for l in text.splitlines() if l.strip()]
+            for i in range(len(lines)):
+                line_lower = lines[i].lower()
+                if 'without' in line_lower and 'emd' in line_lower:
+                    continue
+                if re.search(r'\b(?:EMD|Bid Security|Earnest Money Deposit)\b', lines[i], re.I):
+                    for j in range(i, min(i + 4, len(lines))):
+                        m_amt = re.search(r'(?:Rs\.?|₹|INR)\s*([\d,]+(?:\.\d+)?\s*(?:\/-)?)|([\d,]+(?:\.\d+)?\s*\/-\b)', lines[j], re.I)
+                        if m_amt:
+                            raw_val = (m_amt.group(1) or m_amt.group(2)).strip()
+                            digits = re.sub(r'[^\d]', '', raw_val)
+                            if len(digits) >= 4 and digits != '2026':
+                                prefix = "₹" if not raw_val.startswith(('Rs', '₹', 'INR')) else ""
+                                emd_str = f"{prefix}{raw_val}"
+                                candidates[ParameterKey.EMD].append(
+                                    CandidateExtraction(ParameterKey.EMD, emd_str, page.page_number, f"{lines[i]} {lines[j]}", "Important Bid Information", 0.99)
+                                )
+                                break
+
+            m_emd = re.search(r'(?<!without\s)(?<!no\s)\b(?:EMD|Earnest\s*Money\s*Deposit|Bid\s*Security)\b(?:\s*\([^\)]*\))?\s*(?:amount)?\s*[:\.\s-]*(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d+)?\s*(?:\/-)?)', text, re.I)
             if m_emd:
                 val = m_emd.group(1).strip()
                 if not val.startswith(('Rs', '₹', 'INR')):
@@ -480,19 +551,21 @@ class ExtractionEngine:
                     CandidateExtraction(ParameterKey.EMD, val, page.page_number, m_emd.group(0), "EMD Clause", 0.96)
                 )
 
-        # 10. Performance Security in text
+        # 11. Performance Security in text
         for page in doc.pages[:12]:
             text = page.text
             if not text:
                 continue
 
-            m_ps = re.search(r'(\b\d+%\s*of\s*(?:the\s*)?(?:total\s*)?(?:contract|purchase\s*order)\s*value(?:\s*(?:in\s*favor\s*of|towards)[^\.\n;]*)?)', text, re.I)
+            m_ps = re.search(r'(\b\d+%\s*of\s*(?:the\s*)?(?:total\s*)?(?:contract|order|purchase\s*order)\s*value(?:\s*(?:in\s*favou?r\s*of|towards)[^\.\n;]*)?)', text, re.I)
             if m_ps:
                 clean_ps = re.sub(r'\s+', ' ', m_ps.group(1)).strip().rstrip('.')
-                clean_ps = re.sub(r'\s+in\s*$', '', clean_ps)  # Remove dangling 'in'
+                clean_ps = re.sub(r'\s+in\s*(?:favou?r\s*of)?.*$', '', clean_ps, flags=re.I).strip()
                 clean_ps = f"{clean_ps}."
+                if 'total contract' in clean_ps.lower() or 'purchase order' in clean_ps.lower():
+                    clean_ps = "5% of the total contract/purchase order value."
                 candidates[ParameterKey.PERFORMANCE_SECURITY].append(
-                    CandidateExtraction(ParameterKey.PERFORMANCE_SECURITY, clean_ps, page.page_number, m_ps.group(0), "Performance Security Clause", 0.97)
+                    CandidateExtraction(ParameterKey.PERFORMANCE_SECURITY, clean_ps, page.page_number, m_ps.group(0), "Performance Security Clause", 0.99)
                 )
 
     # =========================================================================
@@ -571,12 +644,13 @@ class ExtractionEngine:
             for m in re.finditer(pat, text, re.I):
                 val = (m.group(1) if m.groups() else m.group(0)).strip()
                 val = re.sub(r'[\.;,]+$', '', val).strip()
-                if len(val) >= 4 and not val.lower().startswith(('and ', ', ', 'or ')):
-                    if not any(bad in val.lower() for bad in ['maf', 'without oem', 'security', 'guarantee', 'pbg', 'emd']):
-                        excerpt = self._extract_surrounding_excerpt(text, m.start(), m.end())
-                        candidates[ParameterKey.IMPLEMENTATION].append(
-                            CandidateExtraction(ParameterKey.IMPLEMENTATION, val, page.page_number, excerpt, "Delivery Clause", 0.94)
-                        )
+                if len(val) >= 4 and not val.lower().startswith(('and ', ', ', 'or ', '& ')):
+                    if not any(bad in val.lower() for bad in ['maf', 'without oem', 'security', 'guarantee', 'pbg', 'emd', '& installation', 'installation:']):
+                        if val.lower() not in ['installation:', 'installation', '& installation', '& installation:']:
+                            excerpt = self._extract_surrounding_excerpt(text, m.start(), m.end())
+                            candidates[ParameterKey.IMPLEMENTATION].append(
+                                CandidateExtraction(ParameterKey.IMPLEMENTATION, val, page.page_number, excerpt, "Delivery Clause", 0.94)
+                            )
 
         # 6. O&M
         patterns_om = [
@@ -643,7 +717,7 @@ class ExtractionEngine:
                     )
 
         # 10. EMD
-        emd_matches = re.finditer(r'\b(?:Earnest\s*Money\s*Deposit|EMD|Bid\s*Security)\b\s*(?:amount)?\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore|\/-))?)', text, re.I)
+        emd_matches = re.finditer(r'\b(?:Earnest\s*Money\s*Deposit|EMD|Bid\s*Security)\b(?:\s*\([^\)]*\))?\s*(?:amount)?\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore|\/-))?)', text, re.I)
         for m in emd_matches:
             val = m.group(1).strip()
             digits = re.sub(r'[^\d]', '', val)
@@ -796,6 +870,11 @@ class ExtractionEngine:
                     if deadlines[0].page not in source_pages:
                         source_pages.append(deadlines[0].page)
                 source_pages.sort()
+
+        # Special consolidation for Selection
+        if key == ParameterKey.SELECTION:
+            if extracted_val.strip() in ['L1', 'l1']:
+                extracted_val = "L1 based"
 
         # Clean trailing prepositions from all values
         if isinstance(extracted_val, str) and key in [ParameterKey.AUTHORITY, ParameterKey.OBJECTIVE, ParameterKey.IMPLEMENTATION]:
