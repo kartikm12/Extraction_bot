@@ -83,7 +83,13 @@ export const App: React.FC = () => {
 
             // Auto-refresh active document details if impacted
             if (activeDocIdRef.current && data.document_id === activeDocIdRef.current) {
-              fetchActiveRecord(activeDocIdRef.current, true);
+              if (data.type === 'document_deleted') {
+                setActiveDocId(null);
+                setActiveRecord(null);
+                setCurrentTab('dashboard');
+              } else {
+                fetchActiveRecord(activeDocIdRef.current, true);
+              }
             }
           } catch (e) {
             // ping/pong or non-JSON message
@@ -150,6 +156,7 @@ export const App: React.FC = () => {
           <Dashboard
             stats={stats}
             loading={loadingStats}
+            onRefresh={() => fetchStats()}
             onSelectDocument={handleSelectDocument}
             onGoToUpload={() => setCurrentTab('upload')}
           />

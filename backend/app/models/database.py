@@ -250,5 +250,35 @@ def get_dashboard_stats() -> Dict[str, Any]:
         "recent_history": recent
     }
 
+def delete_document(document_id: str) -> bool:
+    """Delete a document record, related audit logs, and artifacts from disk."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT stored_filename, word_report_path, verification_xlsx_path, audit_json_path FROM documents WHERE document_id = ?", (document_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return False
+
+    # Clean up associated files if they exist
+    paths_to_clean = [
+        settings.UPLOAD_PATH / row["stored_filename"] if row["stored_filename"] else None,
+        Path(row["word_report_path"]) if row["word_report_path"] else None,
+        Path(row["verification_xlsx_path"]) if row["verification_xlsx_path"] else None,
+        Path(row["audit_json_path"]) if row["audit_json_path"] else None,
+    ]
+    for p in paths_to_clean:
+        if p and p.exists():
+            try:
+                p.unlink()
+            except Exception:
+                pass
+
+    cursor.execute("DELETE FROM audit_logs WHERE document_id = ?", (document_id,))
+    cursor.execute("DELETE FROM documents WHERE document_id = ?", (document_id,))
+    conn.commit()
+    conn.close()
+    return True
+
 # Initialize DB on module import
 init_db()

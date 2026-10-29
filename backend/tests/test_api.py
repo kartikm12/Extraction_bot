@@ -3,7 +3,7 @@ from pathlib import Path
 from backend.app.main import (
     health_check, get_dashboard, get_tender_status, get_tender_details,
     submit_review, regenerate_reports, download_word_summary, download_verification_log,
-    download_audit_json
+    download_audit_json, delete_tender
 )
 from backend.app.models.schemas import (
     DocumentProcessingRecord, ProcessingStage, VerificationStatus,
@@ -133,3 +133,27 @@ def test_regenerate_reports_rechecks_uploaded_document():
     assert len(updated_rec.parameters) == 12
     assert Path(updated_rec.word_report_path).exists()
     assert Path(updated_rec.verification_xlsx_path).exists()
+
+def test_delete_tender_endpoint():
+    doc_id = "TND-DELETETEST01"
+    rec = DocumentProcessingRecord(
+        document_id=doc_id,
+        original_filename="delete_test.pdf",
+        stored_filename="delete_test.pdf",
+        file_type="pdf",
+        file_size_bytes=1024,
+        page_count=1,
+        current_stage=ProcessingStage.REPORT_GENERATED,
+        stage_progress_pct=100
+    )
+    save_document(rec)
+    assert get_document(doc_id) is not None
+
+    del_res = delete_tender(doc_id)
+    assert del_res["document_id"] == doc_id
+    assert get_document(doc_id) is None
+
+    # Deleting non-existent document raises 404
+    with pytest.raises(Exception):
+        delete_tender("TND-NONEXISTENT")
+

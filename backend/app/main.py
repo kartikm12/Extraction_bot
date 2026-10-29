@@ -18,7 +18,7 @@ from backend.app.models.schemas import (
     ReviewSubmission, ParameterKey
 )
 from backend.app.models.database import (
-    save_document, get_document, get_dashboard_stats, log_audit_action
+    save_document, get_document, get_dashboard_stats, log_audit_action, delete_document
 )
 from backend.app.services.job_queue import processing_job, subscribe_events
 from backend.app.services.parser import DocumentParser
@@ -386,6 +386,29 @@ def download_audit_json(document_id: str):
         filename=f"{record.document_id}_Audit.json",
         media_type="application/json"
     )
+
+@app.delete("/api/tenders/{document_id}")
+def delete_tender(document_id: str):
+    logger.info(f"Received request to delete tender document: {document_id}")
+    record = get_document(document_id)
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Tender document '{document_id}' not found.")
+
+    success = delete_document(document_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete tender record.")
+
+    # Broadcast real-time deletion event to all connected clients
+    broadcast_sync({
+        "type": "document_deleted",
+        "document_id": document_id,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+    return {
+        "message": f"Tender document '{document_id}' deleted successfully.",
+        "document_id": document_id
+    }
 
 # Serve built frontend if exists
 FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"

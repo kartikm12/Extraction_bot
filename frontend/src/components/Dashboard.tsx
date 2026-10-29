@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import {
   FileText, CheckCircle2, AlertTriangle, AlertOctagon,
-  Clock, ArrowRight, UploadCloud, Eye, Filter
+  Clock, ArrowRight, UploadCloud, Eye, Filter, Trash2
 } from 'lucide-react';
+import { apiClient } from '../api/client';
 import { DashboardStats } from '../types';
 
 interface DashboardProps {
@@ -18,11 +19,28 @@ type FilterType = 'all' | 'verified' | 'review' | 'conflicts' | 'failures';
 export const Dashboard: React.FC<DashboardProps> = ({
   stats,
   loading,
+  onRefresh,
   onSelectDocument,
   onGoToUpload,
 }) => {
   const [filter, setFilter] = useState<FilterType>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const historyRef = useRef<HTMLDivElement>(null);
+
+  const handleDelete = async (docId: string, filename: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${filename}" (${docId}) from processing history?\n\nThis will remove the extraction record, verification logs, and summary reports.`)) {
+      return;
+    }
+    setDeletingId(docId);
+    try {
+      await apiClient.deleteTender(docId);
+      onRefresh?.();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete tender');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const kpiCards: Array<{
     id: FilterType;
@@ -547,25 +565,70 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
-                        <button
-                          onClick={() => onSelectDocument(doc.document_id, doc.is_fully_verified && !doc.has_conflicts ? 'results' : 'review')}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.35rem 0.75rem',
-                            backgroundColor: '#eff6ff',
-                            color: '#1e3a8a',
-                            border: '1px solid #bfdbfe',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Eye size={14} />
-                          {doc.is_fully_verified && !doc.has_conflicts ? 'View Report' : 'Review'}
-                        </button>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => onSelectDocument(doc.document_id, doc.is_fully_verified && !doc.has_conflicts ? 'results' : 'review')}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                              padding: '0.35rem 0.75rem',
+                              backgroundColor: '#eff6ff',
+                              color: '#1e3a8a',
+                              border: '1px solid #bfdbfe',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#dbeafe';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#eff6ff';
+                            }}
+                          >
+                            <Eye size={14} />
+                            {doc.is_fully_verified && !doc.has_conflicts ? 'View Report' : 'Review'}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(doc.document_id, doc.original_filename);
+                            }}
+                            disabled={deletingId === doc.document_id}
+                            title="Delete from history"
+                            aria-label="Delete tender from history"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '0.35rem 0.45rem',
+                              backgroundColor: '#fef2f2',
+                              color: '#dc2626',
+                              border: '1px solid #fecaca',
+                              borderRadius: '0.375rem',
+                              cursor: deletingId === doc.document_id ? 'not-allowed' : 'pointer',
+                              opacity: deletingId === doc.document_id ? 0.5 : 1,
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (deletingId !== doc.document_id) {
+                                e.currentTarget.style.backgroundColor = '#fee2e2';
+                                e.currentTarget.style.borderColor = '#f87171';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (deletingId !== doc.document_id) {
+                                e.currentTarget.style.backgroundColor = '#fef2f2';
+                                e.currentTarget.style.borderColor = '#fecaca';
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

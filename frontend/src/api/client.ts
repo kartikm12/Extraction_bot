@@ -63,6 +63,17 @@ export const apiClient = {
     return res.json();
   },
 
+  async deleteTender(documentId: string): Promise<{ message: string; document_id: string }> {
+    const res = await fetch(`${API_BASE}/tenders/${documentId}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to delete tender' }));
+      throw new Error(err.detail || 'Failed to delete tender');
+    }
+    return res.json();
+  },
+
   getWordDownloadUrl(documentId: string): string {
     return `${API_BASE}/tenders/${documentId}/download/word`;
   },
