@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { UploadModal } from './components/UploadModal';
@@ -15,28 +15,33 @@ export const App: React.FC = () => {
   const [activeDocId, setActiveDocId] = useState<string | null>(null);
   const [activeRecord, setActiveRecord] = useState<DocumentProcessingRecord | null>(null);
   const [loadingRecord, setLoadingRecord] = useState<boolean>(false);
+  const activeDocIdRef = useRef<string | null>(null);
 
-  const fetchStats = async () => {
-    setLoadingStats(true);
+  useEffect(() => {
+    activeDocIdRef.current = activeDocId;
+  }, [activeDocId]);
+
+  const fetchStats = async (silent = false) => {
+    if (!silent) setLoadingStats(true);
     try {
       const data = await apiClient.getDashboard();
       setStats(data);
     } catch (e) {
       console.error('Error fetching dashboard stats:', e);
     } finally {
-      setLoadingStats(false);
+      if (!silent) setLoadingStats(false);
     }
   };
 
-  const fetchActiveRecord = async (docId: string) => {
-    setLoadingRecord(true);
+  const fetchActiveRecord = async (docId: string, silent = false) => {
+    if (!silent) setLoadingRecord(true);
     try {
       const rec = await apiClient.getTenderDetails(docId);
       setActiveRecord(rec);
     } catch (e) {
       console.error('Error fetching document record:', e);
     } finally {
-      setLoadingRecord(false);
+      if (!silent) setLoadingRecord(false);
     }
   };
 
@@ -49,6 +54,75 @@ export const App: React.FC = () => {
       fetchActiveRecord(activeDocId);
     }
   }, [activeDocId]);
+
+  // Real-time WebSocket connection for automatic live refreshes
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: any = null;
+    let isUnmounted = false;
+
+    const connectWebSocket = () => {
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.port === '5173' ? 'localhost:8000' : window.location.host;
+        const wsUrl = `${protocol}//${host}/api/ws`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('[WebSocket] Real-time event listener connected');
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('[WebSocket] Event received:', data);
+
+            // Auto-refresh dashboard stats
+            fetchStats(true);
+
+            // Auto-refresh active document details if impacted
+            if (activeDocIdRef.current && data.document_id === activeDocIdRef.current) {
+              fetchActiveRecord(activeDocIdRef.current, true);
+            }
+          } catch (e) {
+            // ping/pong or non-JSON message
+          }
+        };
+
+        ws.onclose = () => {
+          if (!isUnmounted) {
+            reconnectTimeout = setTimeout(connectWebSocket, 3000);
+          }
+        };
+
+        ws.onerror = () => {
+          ws?.close();
+        };
+      } catch (err) {
+        if (!isUnmounted) {
+          reconnectTimeout = setTimeout(connectWebSocket, 5000);
+        }
+      }
+    };
+
+    connectWebSocket();
+
+    // Fallback periodic auto-refresh every 4 seconds to guarantee zero manual refresh needed
+    const interval = setInterval(() => {
+      fetchStats(true);
+      if (activeDocIdRef.current) {
+        fetchActiveRecord(activeDocIdRef.current, true);
+      }
+    }, 4000);
+
+    return () => {
+      isUnmounted = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      clearInterval(interval);
+      if (ws) ws.close();
+    };
+  }, []);
 
   const handleUploadSuccess = (docId: string) => {
     setActiveDocId(docId);
@@ -76,7 +150,6 @@ export const App: React.FC = () => {
           <Dashboard
             stats={stats}
             loading={loadingStats}
-            onRefresh={fetchStats}
             onSelectDocument={handleSelectDocument}
             onGoToUpload={() => setCurrentTab('upload')}
           />

@@ -1,14 +1,14 @@
 import React from 'react';
 import {
   FileText, CheckCircle2, AlertTriangle, AlertOctagon,
-  Clock, ArrowRight, UploadCloud, RefreshCw, Eye
+  Clock, ArrowRight, UploadCloud, Eye
 } from 'lucide-react';
 import { DashboardStats } from '../types';
 
 interface DashboardProps {
   stats: DashboardStats | null;
   loading: boolean;
-  onRefresh: () => void;
+  onRefresh?: () => void;
   onSelectDocument: (docId: string) => void;
   onGoToUpload: () => void;
 }
@@ -42,25 +42,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
-            onClick={onRefresh}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.5rem 0.85rem',
-              backgroundColor: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              color: '#334155',
-            }}
-          >
-            <RefreshCw size={15} className={loading ? 'pulsing' : ''} />
-            Refresh
-          </button>
-
-          <button
             onClick={onGoToUpload}
             style={{
               display: 'flex',
@@ -73,6 +54,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               borderRadius: '0.375rem',
               fontSize: '0.875rem',
               fontWeight: 600,
+              cursor: 'pointer',
             }}
           >
             <UploadCloud size={16} />

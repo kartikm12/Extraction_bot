@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, BarChart3, UploadCloud, CheckCircle2, ShieldCheck, Download, AlertTriangle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: 'dashboard' | 'upload' | 'status' | 'review' | 'results';
@@ -12,7 +12,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   setCurrentTab,
   activeDocId,
-  hasConflicts,
 }) => {
   return (
     <header style={{
@@ -26,162 +25,101 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div style={{
         maxWidth: '1280px',
         margin: '0 auto',
-        padding: '0.75rem 1.5rem',
+        padding: '0.85rem 1.5rem',
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem',
+        justifyContent: 'center',
       }}>
-        {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            backgroundColor: '#1e3a8a',
-            color: '#ffffff',
-            padding: '0.5rem',
-            borderRadius: '0.5rem',
+        {/* Navigation Back button (visible when on subpages, positioned absolute so center branding stays perfectly centered) */}
+        {currentTab !== 'dashboard' && (
+          <button
+            onClick={() => setCurrentTab('dashboard')}
+            style={{
+              position: 'absolute',
+              left: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '0.375rem',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#334155',
+              fontSize: '0.825rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+            }}
+            title="Return to Dashboard"
+          >
+            <ArrowLeft size={16} />
+            Back to Dashboard
+          </button>
+        )}
+
+        {/* Center-aligned Brand: Extraction Bot Logo + Header Text */}
+        <div
+          onClick={() => setCurrentTab('dashboard')}
+          style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-          }}>
-            <ShieldCheck size={24} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '1.15rem', color: '#0f172a', letterSpacing: '-0.02em' }}>
+            gap: '0.85rem',
+            cursor: 'pointer',
+            textAlign: 'center',
+            userSelect: 'none',
+          }}
+          title="Tender Analysis & Extraction Bot Dashboard"
+        >
+          <img
+            src="/extraction-bot-logo.png"
+            alt="Extraction Bot Logo"
+            style={{
+              width: '40px',
+              height: '40px',
+              objectFit: 'contain',
+              borderRadius: '0.5rem',
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{
+              fontWeight: 700,
+              fontSize: '1.2rem',
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.25,
+              textAlign: 'center',
+            }}>
               Tender Analysis & Extraction Bot
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            <div style={{
+              fontSize: '0.75rem',
+              color: '#64748b',
+              letterSpacing: '-0.01em',
+              textAlign: 'center',
+            }}>
               Evidence-Verified Document Intelligence • 12 Predefined Parameters
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button
-            onClick={() => setCurrentTab('dashboard')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '0.375rem',
-              border: 'none',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              backgroundColor: currentTab === 'dashboard' ? '#1e3a8a' : 'transparent',
-              color: currentTab === 'dashboard' ? '#ffffff' : '#475569',
-            }}
-          >
-            <BarChart3 size={16} />
-            Dashboard
-          </button>
-
-          <button
-            onClick={() => setCurrentTab('upload')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '0.375rem',
-              border: 'none',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              backgroundColor: currentTab === 'upload' ? '#1e3a8a' : 'transparent',
-              color: currentTab === 'upload' ? '#ffffff' : '#475569',
-            }}
-          >
-            <UploadCloud size={16} />
-            Upload Tender
-          </button>
-
-          {activeDocId && (
-            <>
-              <button
-                onClick={() => setCurrentTab('status')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  backgroundColor: currentTab === 'status' ? '#1e3a8a' : 'transparent',
-                  color: currentTab === 'status' ? '#ffffff' : '#475569',
-                }}
-              >
-                <CheckCircle2 size={16} />
-                Status
-              </button>
-
-              <button
-                onClick={() => setCurrentTab('review')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  backgroundColor: currentTab === 'review' ? '#1e3a8a' : 'transparent',
-                  color: currentTab === 'review' ? '#ffffff' : '#475569',
-                  position: 'relative',
-                }}
-              >
-                <FileText size={16} />
-                Review & Verification
-                {hasConflicts && (
-                  <span style={{
-                    backgroundColor: '#ea580c',
-                    color: '#fff',
-                    borderRadius: '9999px',
-                    padding: '0.1rem 0.4rem',
-                    fontSize: '0.7rem',
-                    marginLeft: '0.2rem',
-                    fontWeight: 700,
-                  }}>
-                    !
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setCurrentTab('results')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  backgroundColor: currentTab === 'results' ? '#1e3a8a' : 'transparent',
-                  color: currentTab === 'results' ? '#ffffff' : '#475569',
-                }}
-              >
-                <Download size={16} />
-                Reports & Downloads
-              </button>
-            </>
-          )}
-        </nav>
-
-        {/* Active Doc Pill */}
-        {activeDocId && (
+        {/* Active Document Indicator (positioned absolute) */}
+        {activeDocId && currentTab !== 'dashboard' && (
           <div style={{
+            position: 'absolute',
+            right: '1.5rem',
             fontSize: '0.8rem',
-            padding: '0.25rem 0.65rem',
+            padding: '0.3rem 0.75rem',
             backgroundColor: '#f1f5f9',
             border: '1px solid #cbd5e1',
             borderRadius: '9999px',
             color: '#334155',
             fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
           }}>
             Tender: <span style={{ color: '#1e3a8a' }}>{activeDocId}</span>
           </div>
@@ -190,4 +128,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-

@@ -1,11 +1,12 @@
 import os
 import shutil
 import uuid
+import asyncio
 from pathlib import Path
 from typing import Optional, List
 from datetime import datetime
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,7 +19,7 @@ from backend.app.models.schemas import (
 from backend.app.models.database import (
     save_document, get_document, get_dashboard_stats, log_audit_action
 )
-from backend.app.services.job_queue import processing_job
+from backend.app.services.job_queue import processing_job, subscribe_events
 from backend.app.services.docx_generator import docx_generator
 from backend.app.services.xlsx_generator import xlsx_generator
 from backend.app.utils.security import validate_uploaded_file, sanitize_filename
@@ -37,6 +38,68 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# WebSocket Connection Manager for real-time automatic UI updates
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                self.disconnect(connection)
+
+ws_manager = ConnectionManager()
+main_loop: Optional[asyncio.AbstractEventLoop] = None
+
+@app.on_event("startup")
+async def startup_event():
+    global main_loop
+    main_loop = asyncio.get_running_loop()
+
+def broadcast_sync(message: dict):
+    try:
+        global main_loop
+        if main_loop and main_loop.is_running():
+            asyncio.run_coroutine_threadsafe(ws_manager.broadcast(message), main_loop)
+        else:
+            try:
+                loop = asyncio.get_running_loop()
+                if loop and loop.is_running():
+                    asyncio.run_coroutine_threadsafe(ws_manager.broadcast(message), loop)
+            except RuntimeError:
+                pass
+    except Exception:
+        pass
+
+def handle_job_event(event: dict):
+    broadcast_sync(event)
+
+subscribe_events(handle_job_event)
+
+@app.websocket("/api/ws")
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception:
+        ws_manager.disconnect(websocket)
 
 @app.get("/api/health")
 def health_check():
@@ -92,6 +155,14 @@ async def upload_tender(file: UploadFile = File(...)):
 
     # Launch async background pipeline
     processing_job.enqueue_document(record, target_path)
+
+    await ws_manager.broadcast({
+        "type": "tender_uploaded",
+        "document_id": doc_id,
+        "filename": file.filename,
+        "stage": record.current_stage.value,
+        "timestamp": datetime.utcnow().isoformat()
+    })
 
     return {
         "message": "File uploaded successfully. Processing initiated.",
@@ -174,6 +245,12 @@ def submit_review(document_id: str, submission: ReviewSubmission):
     record.is_fully_verified = not record.requires_human_review
     save_document(record)
 
+    broadcast_sync({
+        "type": "tender_reviewed",
+        "document_id": document_id,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
     return {"message": "Review submitted successfully", "document_id": document_id}
 
 @app.post("/api/tenders/{document_id}/regenerate")
@@ -202,6 +279,13 @@ def regenerate_reports(document_id: str):
     save_document(record)
 
     log_audit_action(document_id, "REPORTS_REGENERATED", reviewer_comment="Reports regenerated following review updates")
+
+    broadcast_sync({
+        "type": "reports_regenerated",
+        "document_id": document_id,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
     return {"message": "Reports regenerated successfully", "document_id": document_id}
 
 @app.get("/api/tenders/{document_id}/download/word")

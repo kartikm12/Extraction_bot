@@ -372,7 +372,7 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           fontStyle: 'italic',
           textAlign: 'center',
         }}>
-          Note: Summary strictly confined to the 12 predefined parameters extracted from source evidence. Conflicting parameters require human review.
+          {/* Note: Summary strictly confined to the 12 predefined parameters extracted from source evidence. Conflicting parameters require human review.*/}
         </div>
       </div>
     </div>

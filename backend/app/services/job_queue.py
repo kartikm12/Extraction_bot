@@ -18,6 +18,18 @@ from backend.app.services.xlsx_generator import xlsx_generator
 
 logger = logging.getLogger(__name__)
 
+_subscribers = []
+
+def subscribe_events(callback):
+    _subscribers.append(callback)
+
+def publish_event(event: dict):
+    for cb in list(_subscribers):
+        try:
+            cb(event)
+        except Exception as e:
+            logger.debug(f"Event subscriber error: {e}")
+
 class DocumentProcessingJob:
     def __init__(self):
         self.executor = ThreadPoolExecutor(max_workers=3)
@@ -38,10 +50,12 @@ class DocumentProcessingJob:
             record.stage_progress_pct = 12
             record.stages_completed.append(ProcessingStage.FILE_UPLOADED.value)
             save_document(record)
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
 
             # Stage 2: Document parsed
             record.current_stage = ProcessingStage.DOCUMENT_PARSED
             record.stage_progress_pct = 25
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             parsed_doc = DocumentParser.parse_document(file_path)
             record.page_count = parsed_doc.page_count
             record.pages_meta = parsed_doc.get_pages_meta()
@@ -51,6 +65,7 @@ class DocumentProcessingJob:
             # Stage 3: OCR completed where necessary
             record.current_stage = ProcessingStage.OCR_COMPLETED
             record.stage_progress_pct = 38
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             # OCR is integrated inside DocumentParser; record OCR warnings if any
             ocr_warnings = []
             for p in record.pages_meta:
@@ -62,6 +77,7 @@ class DocumentProcessingJob:
             # Stage 4: Parameters extracted
             record.current_stage = ProcessingStage.PARAMETERS_EXTRACTED
             record.stage_progress_pct = 50
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             initial_extractions = extraction_engine.extract_parameters(parsed_doc)
             record.parameters = initial_extractions
             record.stages_completed.append(ProcessingStage.PARAMETERS_EXTRACTED.value)
@@ -70,6 +86,7 @@ class DocumentProcessingJob:
             # Stage 5 & 6: Evidence verified & Conflicts checked
             record.current_stage = ProcessingStage.EVIDENCE_VERIFIED
             record.stage_progress_pct = 65
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             verified_params, detected_conflicts = evidence_verifier.verify_all(parsed_doc, initial_extractions)
             record.parameters = verified_params
             record.conflicts = detected_conflicts
@@ -77,6 +94,7 @@ class DocumentProcessingJob:
 
             record.current_stage = ProcessingStage.CONFLICTS_CHECKED
             record.stage_progress_pct = 75
+            publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             record.has_conflicts = len(detected_conflicts) > 0
             record.has_missing_values = any(p.status == VerificationStatus.MISSING for p in verified_params.values())
             
@@ -96,6 +114,7 @@ class DocumentProcessingJob:
                 record.is_fully_verified = False
                 record.stages_completed.append(ProcessingStage.HUMAN_REVIEW_REQUIRED.value)
                 save_document(record)
+                publish_event({"type": "stage_update", "document_id": document_id, "stage": record.current_stage.value, "progress": record.stage_progress_pct})
             else:
                 record.is_fully_verified = True
 
@@ -124,6 +143,7 @@ class DocumentProcessingJob:
             
             save_document(record)
             log_audit_action(document_id, "PROCESSING_COMPLETED", reviewer_comment="Pipeline executed successfully")
+            publish_event({"type": "processing_completed", "document_id": document_id, "stage": record.current_stage.value})
             logger.info(f"Processing completed for {document_id}")
 
         except Exception as e:
@@ -131,6 +151,7 @@ class DocumentProcessingJob:
             record.error_message = str(e)
             save_document(record)
             log_audit_action(document_id, "PROCESSING_FAILED", reviewer_comment=str(e))
+            publish_event({"type": "processing_failed", "document_id": document_id, "error": str(e)})
 
 processing_job = DocumentProcessingJob()
 
