@@ -31,7 +31,7 @@ class EvidenceVerificationEngine:
 
     def _verify_parameter(self, doc: ParsedDocument, param: ParameterExtraction):
         # Case 0: Explicit finding of not specified / absent in document
-        if param.extracted_value.startswith("Not specified in the uploaded document"):
+        if param.extracted_value.startswith(("Not specified in the uploaded document", "Not specified in the tender document")):
             param.status = VerificationStatus.VERIFIED
             param.confidence_score = 1.0
             param.confidence_indicator = "High"

@@ -138,5 +138,32 @@ def test_extract_igrs_video_conference_tender():
     assert "5%" in extractions["performance_security"].extracted_value
     assert extractions["indicative_value"].extracted_value == "—"
 
+def test_extract_hmwssb_printers_tender():
+    import glob
+    fpaths = glob.glob("storage/uploads/*HMWSSB*.pdf")
+    if not fpaths:
+        pytest.skip("HMWSSB tender PDF not found in uploads")
+
+    doc = DocumentParser.parse_document(Path(fpaths[0]))
+    extractions = extraction_engine.extract_parameters(doc)
+
+    assert "TGTS/CS/HMWSSB/Printers/2025" in extractions["tender_no"].extracted_value
+    assert "15 October 2026" in extractions["tender_no"].extracted_value
+    assert "HMWSSB" in extractions["authority"].extracted_value
+    assert "Supply and installation of 80 or more printers" in extractions["objective"].extracted_value
+    assert "80+ printers" in extractions["core_scope"].extracted_value
+    assert "33 PPM" in extractions["core_scope"].extracted_value
+    assert "2 weeks" in extractions["implementation"].extracted_value
+    assert "3-year" in extractions["om"].extracted_value
+    assert "24 hours" in extractions["om"].extracted_value
+    assert "Three-part" in extractions["selection"].extracted_value or "L1" in extractions["selection"].extracted_value
+    assert "Not permitted" in extractions["consortium"].extracted_value
+    assert "15 October 2026" in extractions["bid_dates"].extracted_value
+    assert "23 October 2026" in extractions["bid_dates"].extracted_value
+    assert "1,00,000" in extractions["emd"].extracted_value
+    assert "5%" in extractions["performance_security"].extracted_value
+    assert extractions["indicative_value"].extracted_value == "—"
+
+
 
 
