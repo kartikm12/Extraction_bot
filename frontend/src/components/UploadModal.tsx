@@ -80,19 +80,15 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: '2rem auto', padding: '0 1.5rem' }}>
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '0.75rem',
-        border: '1px solid #e2e8f0',
-        padding: '2rem',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+    <div style={{ maxWidth: '720px', margin: '2.5rem auto', padding: '0 1.5rem' }}>
+      <div className="glass-panel" style={{
+        padding: '2.5rem',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>
             Upload Tender Document
           </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.35rem' }}>
             Ingest text-based PDFs, scanned image PDFs, or Word documents for automatic 12-parameter extraction and evidence verification.
           </p>
         </div>
@@ -105,13 +101,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           style={{
-            border: `2px dashed ${dragActive ? '#1e3a8a' : '#cbd5e1'}`,
-            backgroundColor: dragActive ? '#eff6ff' : '#f8fafc',
-            borderRadius: '0.5rem',
-            padding: '2.5rem 1.5rem',
+            border: `2px dashed ${dragActive ? '#2563eb' : 'rgba(147, 197, 253, 0.8)'}`,
+            backgroundColor: dragActive ? 'rgba(239, 246, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '0.85rem',
+            padding: '2.75rem 1.5rem',
             textAlign: 'center',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: dragActive ? '0 12px 30px rgba(37, 99, 235, 0.18)' : '0 4px 16px rgba(31, 38, 135, 0.04)',
           }}
         >
           <input
@@ -123,45 +122,48 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           />
 
           <div style={{
-            width: '3.5rem',
-            height: '3.5rem',
+            width: '4rem',
+            height: '4rem',
             borderRadius: '50%',
-            backgroundColor: '#eff6ff',
+            backgroundColor: 'rgba(239, 246, 255, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(191, 219, 254, 0.8)',
             color: '#1e3a8a',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1rem',
+            margin: '0 auto 1.25rem',
+            boxShadow: '0 6px 18px rgba(37, 99, 235, 0.15)',
           }}>
-            <UploadCloud size={30} />
+            <UploadCloud size={32} />
           </div>
 
-          <div style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b' }}>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1e293b' }}>
             {selectedFile ? selectedFile.name : 'Drag & drop tender document here, or click to browse'}
           </div>
 
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem', fontWeight: 500 }}>
             Supports PDF (native & scanned), Word (.docx, .doc) • Max file size: 50MB
           </div>
         </div>
 
         {/* Selected File Details */}
         {selectedFile && (
-          <div style={{
-            marginTop: '1.25rem',
-            padding: '0.75rem 1rem',
-            backgroundColor: '#f1f5f9',
-            borderRadius: '0.375rem',
+          <div className="glass-card" style={{
+            marginTop: '1.5rem',
+            padding: '0.85rem 1.15rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            background: 'rgba(240, 253, 244, 0.75)',
+            borderColor: 'rgba(187, 247, 208, 0.85)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileCheck size={18} color="#16a34a" />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <FileCheck size={20} color="#16a34a" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#14532d' }}>
                 {selectedFile.name}
               </span>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              <span style={{ fontSize: '0.775rem', color: '#166534', fontWeight: 500 }}>
                 ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
               </span>
             </div>
@@ -171,11 +173,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 setSelectedFile(null);
               }}
               style={{
-                fontSize: '0.75rem',
+                fontSize: '0.8rem',
                 color: '#dc2626',
                 border: 'none',
                 background: 'none',
-                fontWeight: 600,
+                fontWeight: 700,
+                cursor: 'pointer',
               }}
             >
               Remove
@@ -185,28 +188,31 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
         {/* Progress Bar */}
         {uploading && (
-          <div style={{ marginTop: '1.25rem' }}>
+          <div style={{ marginTop: '1.5rem' }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
-              fontSize: '0.8rem',
-              color: '#475569',
-              marginBottom: '0.35rem',
+              fontSize: '0.825rem',
+              color: '#334155',
+              fontWeight: 600,
+              marginBottom: '0.45rem',
             }}>
               <span>Uploading & initiating extraction engine...</span>
               <span>{progress}%</span>
             </div>
             <div style={{
               width: '100%',
-              height: '8px',
-              backgroundColor: '#e2e8f0',
+              height: '9px',
+              backgroundColor: 'rgba(226, 232, 240, 0.7)',
               borderRadius: '9999px',
               overflow: 'hidden',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
             }}>
               <div style={{
                 width: `${progress}%`,
                 height: '100%',
-                backgroundColor: '#1e3a8a',
+                background: 'linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%)',
+                boxShadow: '0 0 12px rgba(59, 130, 246, 0.6)',
                 transition: 'width 0.3s ease',
               }} />
             </div>
@@ -216,18 +222,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         {/* Error Alert */}
         {error && (
           <div style={{
-            marginTop: '1.25rem',
-            padding: '0.75rem 1rem',
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.375rem',
+            marginTop: '1.5rem',
+            padding: '0.85rem 1.15rem',
+            backgroundColor: 'rgba(254, 226, 226, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(254, 202, 202, 0.9)',
+            borderRadius: '0.5rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
+            gap: '0.6rem',
             color: '#991b1b',
             fontSize: '0.875rem',
+            fontWeight: 500,
+            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.08)',
           }}>
-            <AlertCircle size={18} />
+            <AlertCircle size={20} />
             <span>{error}</span>
           </div>
         )}
@@ -236,21 +245,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: '0.75rem',
+          gap: '0.85rem',
           marginTop: '2rem',
         }}>
           <button
             onClick={onCancel}
             disabled={uploading}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '0.375rem',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#475569',
-              fontWeight: 500,
-              fontSize: '0.875rem',
-            }}
+            className="glass-btn-secondary"
           >
             Cancel
           </button>
@@ -258,20 +259,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <button
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
+            className="glass-btn-primary"
             style={{
               padding: '0.6rem 1.5rem',
-              borderRadius: '0.375rem',
-              border: 'none',
-              backgroundColor: selectedFile && !uploading ? '#1e3a8a' : '#94a3b8',
-              color: '#ffffff',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
             }}
           >
-            <UploadCloud size={16} />
+            <UploadCloud size={18} />
             {uploading ? 'Processing...' : 'Upload & Analyze Tender'}
           </button>
         </div>

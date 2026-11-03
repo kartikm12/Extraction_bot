@@ -143,7 +143,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       <Navbar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
@@ -204,18 +204,16 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      <footer style={{
-        backgroundColor: '#ffffff',
-        borderTop: '1px solid #e2e8f0',
+      <footer className="glass-footer" style={{
         padding: '1.25rem 1.5rem',
         textAlign: 'center',
         fontSize: '0.8rem',
-        color: '#64748b',
+        color: '#475569',
       }}>
-        <div>
+        <div style={{ fontWeight: 500 }}>
           Tender Docs Analysis and Extraction Bot • Production Release v1.0.0
         </div>
-        <div style={{ marginTop: '0.2rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+        <div style={{ marginTop: '0.2rem', fontSize: '0.75rem', color: '#64748b' }}>
           Constrained 12-parameter schema • Deterministic & LLM-Powered Evidence Verification • Audit-Grade Document Intelligence
         </div>
       </footer>

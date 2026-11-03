@@ -65,29 +65,25 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
 
   return (
     <div style={{ maxWidth: '850px', margin: '2rem auto', padding: '0 1.5rem' }}>
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '0.75rem',
-        border: '1px solid #e2e8f0',
-        padding: '2rem',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+      <div className="glass-panel" style={{
+        padding: '2.5rem',
       }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '1.5rem',
+          marginBottom: '1.75rem',
           flexWrap: 'wrap',
           gap: '1rem',
-          borderBottom: '1px solid #f1f5f9',
-          paddingBottom: '1rem',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.7)',
+          paddingBottom: '1.25rem',
         }}>
           <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Document Processing Pipeline
             </div>
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', marginTop: '0.2rem' }}>
               Tender: <span style={{ color: '#1e3a8a' }}>{documentId}</span>
             </h1>
           </div>
@@ -96,10 +92,13 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
             <div style={{
               fontSize: '0.85rem',
               fontWeight: 700,
-              padding: '0.35rem 0.75rem',
+              padding: '0.4rem 0.95rem',
               borderRadius: '9999px',
-              backgroundColor: isComplete ? '#dcfce7' : (hasError ? '#fee2e2' : '#eff6ff'),
+              backgroundColor: isComplete ? 'rgba(220, 252, 231, 0.85)' : (hasError ? 'rgba(254, 226, 226, 0.85)' : 'rgba(239, 246, 255, 0.85)'),
               color: isComplete ? '#166534' : (hasError ? '#991b1b' : '#1e40af'),
+              border: isComplete ? '1px solid rgba(134, 239, 172, 0.8)' : (hasError ? '1px solid rgba(254, 202, 202, 0.8)' : '1px solid rgba(191, 219, 254, 0.8)'),
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 2px 8px rgba(31, 38, 135, 0.05)',
             }}>
               {isComplete ? 'Processing Complete' : (hasError ? 'Processing Error' : `${statusData?.stage_progress_pct ?? 0}% In Progress`)}
             </div>
@@ -111,21 +110,27 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
           <div style={{
             width: '100%',
             height: '10px',
-            backgroundColor: '#e2e8f0',
+            backgroundColor: 'rgba(226, 232, 240, 0.7)',
             borderRadius: '9999px',
             overflow: 'hidden',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
           }}>
             <div style={{
               width: `${statusData?.stage_progress_pct ?? 10}%`,
               height: '100%',
-              backgroundColor: hasError ? '#dc2626' : (statusData?.has_conflicts ? '#ea580c' : '#1e3a8a'),
+              background: hasError
+                ? 'linear-gradient(90deg, #dc2626, #f87171)'
+                : (statusData?.has_conflicts
+                  ? 'linear-gradient(90deg, #ea580c, #fb923c)'
+                  : 'linear-gradient(90deg, #1e3a8a, #3b82f6)'),
+              boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)',
               transition: 'width 0.4s ease',
             }} />
           </div>
         </div>
 
         {/* 8-Stage Roadmap */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {STAGES.map((stage, idx) => {
             const isFinished = statusData?.stages_completed?.includes(stage.id) || (isComplete && idx <= currentStageIndex);
             const isCurrent = statusData?.current_stage === stage.id;
@@ -134,28 +139,37 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
             return (
               <div
                 key={stage.id}
+                className="glass-card"
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '1rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: `1px solid ${isCurrent ? '#bfdbfe' : (isFinished ? '#e2e8f0' : '#f1f5f9')}`,
-                  backgroundColor: isCurrent ? '#f0f7ff' : (isFinished ? '#ffffff' : '#f8fafc'),
+                  padding: '0.95rem 1.15rem',
+                  borderRadius: '0.65rem',
+                  border: isCurrent
+                    ? '1.5px solid rgba(59, 130, 246, 0.85)'
+                    : (isFinished ? '1px solid rgba(255, 255, 255, 0.8)' : '1px solid rgba(226, 232, 240, 0.6)'),
+                  backgroundColor: isCurrent
+                    ? 'rgba(239, 246, 255, 0.75)'
+                    : (isFinished ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.35)'),
+                  boxShadow: isCurrent
+                    ? '0 6px 20px rgba(37, 99, 235, 0.12), 0 0 0 2px rgba(59, 130, 246, 0.2)'
+                    : '0 2px 6px rgba(31, 38, 135, 0.03)',
                   transition: 'all 0.2s ease',
                 }}
               >
                 {/* Stage Icon */}
                 <div style={{
-                  width: '2rem',
-                  height: '2rem',
+                  width: '2.1rem',
+                  height: '2.1rem',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  backgroundColor: isFinished ? '#16a34a' : (isCurrent ? '#1e3a8a' : '#cbd5e1'),
+                  backgroundColor: isFinished ? '#16a34a' : (isCurrent ? '#1e3a8a' : 'rgba(203, 213, 225, 0.7)'),
                   color: '#ffffff',
+                  boxShadow: isCurrent ? '0 0 10px rgba(30, 58, 138, 0.4)' : 'none',
                 }}>
                   {isFinished ? (
                     <Check size={16} />
@@ -171,24 +185,24 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{
                       fontSize: '0.95rem',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       color: isPending ? '#94a3b8' : '#0f172a',
                     }}>
                       Stage {idx + 1}: {stage.name}
                     </div>
 
                     {isFinished && (
-                      <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700 }}>
                         Completed
                       </span>
                     )}
                     {isCurrent && (
-                      <span style={{ fontSize: '0.75rem', color: '#1e3a8a', fontWeight: 600 }} className="pulsing">
+                      <span style={{ fontSize: '0.75rem', color: '#1e3a8a', fontWeight: 700 }} className="pulsing">
                         Executing...
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: isPending ? '#94a3b8' : '#64748b', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: isPending ? '#94a3b8' : '#64748b', marginTop: '0.2rem', fontWeight: 500 }}>
                     {stage.desc}
                   </div>
                 </div>
@@ -200,22 +214,24 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
         {/* Conflict / Warning Alert Banner */}
         {statusData?.has_conflicts && (
           <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#ffedd5',
-            border: '1px solid #fdba74',
-            borderRadius: '0.5rem',
+            marginTop: '1.75rem',
+            padding: '1.1rem 1.25rem',
+            backgroundColor: 'rgba(255, 237, 213, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(253, 186, 116, 0.9)',
+            borderRadius: '0.65rem',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '0.75rem',
+            gap: '0.85rem',
             color: '#9a3412',
+            boxShadow: '0 4px 14px rgba(234, 88, 12, 0.08)',
           }}>
-            <ShieldAlert size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <ShieldAlert size={22} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>
                 Clause Contradictions Detected
               </div>
-              <p style={{ fontSize: '0.825rem', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.825rem', marginTop: '0.25rem', lineHeight: 1.4 }}>
                 The evidence verification engine identified conflicting terms (such as differing delivery schedules or bid deadlines) across sections. Human review is required before final sign-off.
               </p>
             </div>
@@ -228,23 +244,17 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
           justifyContent: 'flex-end',
           gap: '0.75rem',
           marginTop: '2rem',
-          borderTop: '1px solid #f1f5f9',
+          borderTop: '1px solid rgba(226, 232, 240, 0.7)',
           paddingTop: '1.25rem',
         }}>
           {statusData?.requires_human_review ? (
             <button
               onClick={onProceedToReview}
+              className="glass-btn-primary"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
+                background: 'linear-gradient(135deg, #c2410c 0%, #ea580c 100%)',
+                boxShadow: '0 4px 14px rgba(234, 88, 12, 0.35)',
                 padding: '0.65rem 1.5rem',
-                backgroundColor: '#ea580c',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.9rem',
-                fontWeight: 600,
               }}
             >
               <FileSearch size={16} />
@@ -254,17 +264,9 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
           ) : isComplete ? (
             <button
               onClick={onProceedToResults}
+              className="glass-btn-primary"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
                 padding: '0.65rem 1.5rem',
-                backgroundColor: '#1e3a8a',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.9rem',
-                fontWeight: 600,
               }}
             >
               <FileText size={16} />
@@ -274,14 +276,10 @@ export const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
           ) : (
             <button
               disabled
+              className="glass-btn-secondary"
               style={{
-                padding: '0.65rem 1.25rem',
-                backgroundColor: '#94a3b8',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
+                opacity: 0.6,
+                cursor: 'not-allowed',
               }}
             >
               Processing document...

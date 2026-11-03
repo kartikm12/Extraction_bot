@@ -14,10 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeDocId,
 }) => {
   return (
-    <header style={{
-      backgroundColor: '#ffffff',
-      borderBottom: '1px solid #e2e8f0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    <header className="glass-navbar" style={{
       position: 'sticky',
       top: 0,
       zIndex: 50,
@@ -31,25 +28,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        {/* Navigation Back button (visible when on subpages, positioned absolute so center branding stays perfectly centered) */}
+        {/* Navigation Back button */}
         {currentTab !== 'dashboard' && (
           <button
             onClick={() => setCurrentTab('dashboard')}
+            className="glass-btn-secondary"
             style={{
               position: 'absolute',
               left: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
               padding: '0.45rem 0.85rem',
-              borderRadius: '0.375rem',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#334155',
               fontSize: '0.825rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
             }}
             title="Return to Dashboard"
           >
@@ -76,19 +64,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             src="/extraction-bot-logo.png"
             alt="Extraction Bot Logo"
             style={{
-              width: '40px',
-              height: '40px',
+              width: '42px',
+              height: '42px',
               objectFit: 'contain',
-              borderRadius: '0.5rem',
+              borderRadius: '0.65rem',
               flexShrink: 0,
+              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.18)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{
-              fontWeight: 700,
-              fontSize: '1.2rem',
+              fontWeight: 800,
+              fontSize: '1.25rem',
               color: '#0f172a',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.025em',
               lineHeight: 1.25,
               textAlign: 'center',
             }}>
@@ -99,6 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               color: '#64748b',
               letterSpacing: '-0.01em',
               textAlign: 'center',
+              fontWeight: 500,
             }}>
               Evidence-Verified Document Intelligence • 12 Predefined Parameters
             </div>
@@ -107,21 +98,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Active Document Indicator (positioned absolute) */}
         {activeDocId && currentTab !== 'dashboard' && (
-          <div style={{
+          <div className="glass-card" style={{
             position: 'absolute',
             right: '1.5rem',
             fontSize: '0.8rem',
-            padding: '0.3rem 0.75rem',
-            backgroundColor: '#f1f5f9',
-            border: '1px solid #cbd5e1',
+            padding: '0.35rem 0.85rem',
             borderRadius: '9999px',
             color: '#334155',
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
             gap: '0.35rem',
+            boxShadow: '0 2px 8px rgba(31, 38, 135, 0.06)',
           }}>
-            Tender: <span style={{ color: '#1e3a8a' }}>{activeDocId}</span>
+            Tender: <span style={{ color: '#1e3a8a', fontWeight: 700 }}>{activeDocId}</span>
           </div>
         )}
       </div>

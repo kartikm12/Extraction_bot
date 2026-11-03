@@ -122,22 +122,22 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.5rem',
+        marginBottom: '1.75rem',
         flexWrap: 'wrap',
         gap: '1rem',
       }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+          <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>
             Extraction & Evidence Verification Audit
           </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.2rem' }}>
             Tender: <strong style={{ color: '#1e3a8a' }}>{record.document_id}</strong> ({record.original_filename}) • {record.page_count} Pages Analyzed
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {saveSuccess && (
-            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 700 }}>
               {successMessage}
             </span>
           )}
@@ -146,20 +146,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
             type="button"
             onClick={handleRecheckDocument}
             disabled={rechecking || submitting}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1rem',
-              backgroundColor: '#ffffff',
-              color: '#334155',
-              border: '1px solid #cbd5e1',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: rechecking ? 'not-allowed' : 'pointer',
-              opacity: rechecking ? 0.7 : 1,
-            }}
+            className="glass-btn-secondary"
             title="Re-check the original uploaded document, re-extract and verify all 12 parameters"
           >
             <RefreshCw size={15} className={rechecking ? 'pulsing' : ''} />
@@ -168,18 +155,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
 
           <button
             onClick={onProceedToResults}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1.25rem',
-              backgroundColor: '#1e3a8a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
+            className="glass-btn-primary"
           >
             <FileText size={16} />
             Generate Word Report
@@ -190,32 +166,30 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
 
       {/* Side-by-Side Conflict Inspection Box if any conflict is selected or detected */}
       {record.conflicts && record.conflicts.length > 0 && (
-        <div style={{
-          backgroundColor: '#fff7ed',
-          border: '1px solid #fdba74',
-          borderRadius: '0.5rem',
-          padding: '1.25rem',
-          marginBottom: '1.5rem',
+        <div className="glass-panel" style={{
+          backgroundColor: 'rgba(255, 237, 213, 0.85)',
+          border: '1px solid rgba(253, 186, 116, 0.85)',
+          padding: '1.5rem',
+          marginBottom: '1.75rem',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <AlertOctagon size={20} color="#c2410c" />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#9a3412' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
+            <AlertOctagon size={22} color="#c2410c" />
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#9a3412', letterSpacing: '-0.02em' }}>
               Material Contradictions Detected ({record.conflicts.length})
             </h2>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {record.conflicts.map((conf, cIdx) => (
-              <div key={cIdx} style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #fed7aa',
-                borderRadius: '0.375rem',
-                padding: '1rem',
+              <div key={cIdx} className="glass-card" style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                borderColor: 'rgba(254, 215, 170, 0.9)',
+                padding: '1.15rem',
               }}>
-                <div style={{ fontWeight: 700, color: '#9a3412', fontSize: '0.95rem' }}>
+                <div style={{ fontWeight: 800, color: '#9a3412', fontSize: '1rem' }}>
                   Parameter: {conf.parameter_name}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.2rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.25rem', fontWeight: 500 }}>
                   {conf.description}
                 </div>
 
@@ -224,14 +198,12 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                   gap: '1rem',
-                  marginTop: '0.75rem',
+                  marginTop: '0.85rem',
                 }}>
                   {conf.statements.map((stmt, sIdx) => (
-                    <div key={sIdx} style={{
-                      backgroundColor: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '0.375rem',
-                      padding: '0.85rem',
+                    <div key={sIdx} className="glass-card" style={{
+                      backgroundColor: 'rgba(248, 250, 252, 0.75)',
+                      padding: '0.95rem',
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{
@@ -239,23 +211,24 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                           fontWeight: 700,
                           backgroundColor: '#1e3a8a',
                           color: '#fff',
-                          padding: '0.15rem 0.5rem',
+                          padding: '0.2rem 0.6rem',
                           borderRadius: '9999px',
                         }}>
                           Statement {sIdx + 1} • Page {stmt.source_page}
                         </span>
                       </div>
-                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', marginTop: '0.5rem' }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', marginTop: '0.55rem' }}>
                         "{stmt.value}"
                       </div>
                       <div style={{
                         fontSize: '0.8rem',
                         color: '#475569',
                         fontStyle: 'italic',
-                        backgroundColor: '#ffffff',
-                        borderLeft: '3px solid #cbd5e1',
-                        padding: '0.4rem 0.6rem',
-                        marginTop: '0.5rem',
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        borderLeft: '3px solid #3b82f6',
+                        padding: '0.45rem 0.65rem',
+                        marginTop: '0.55rem',
+                        borderRadius: '0 0.25rem 0.25rem 0',
                       }}>
                         Source Excerpt: "{stmt.source_excerpt}"
                       </div>
@@ -279,12 +252,12 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
           return (
             <div
               key={param.parameter_key}
+              className="glass-card glass-card-interactive"
               style={{
-                backgroundColor: '#ffffff',
-                border: `1px solid ${isConflict ? '#fdba74' : (isVerified ? '#bbf7d0' : '#e2e8f0')}`,
-                borderRadius: '0.5rem',
-                padding: '1.25rem',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                border: isConflict
+                  ? '1.5px solid rgba(251, 146, 60, 0.8)'
+                  : (isVerified ? '1.5px solid rgba(134, 239, 172, 0.8)' : '1px solid rgba(255, 255, 255, 0.8)'),
+                padding: '1.35rem',
               }}
             >
               {/* Header */}
@@ -293,33 +266,30 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '0.5rem',
-                borderBottom: '1px solid #f1f5f9',
-                paddingBottom: '0.75rem',
+                gap: '0.6rem',
+                borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+                paddingBottom: '0.85rem',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <span style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
                     {param.display_name}
                   </span>
 
                   {/* Status Pill */}
-                  <span style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '9999px',
-                    backgroundColor: isVerified ? '#dcfce7' : (isConflict ? '#ffedd5' : (isMissing ? '#f1f5f9' : '#fef3c7')),
-                    color: isVerified ? '#166534' : (isConflict ? '#c2410c' : (isMissing ? '#64748b' : '#92400e')),
+                  <span className={isVerified ? 'glass-badge-verified' : (isConflict ? 'glass-badge-conflict' : (isMissing ? 'glass-badge-missing' : 'glass-badge-review'))} style={{
+                    fontSize: '0.725rem',
+                    padding: '0.25rem 0.65rem',
                   }}>
                     {param.status}
                   </span>
 
                   {/* Confidence */}
                   <span style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.775rem',
                     color: '#64748b',
+                    fontWeight: 500,
                   }}>
-                    Confidence: <strong>{param.confidence_indicator}</strong> ({Math.round(param.confidence_score * 100)}%)
+                    Confidence: <strong style={{ color: '#1e293b' }}>{param.confidence_indicator}</strong> ({Math.round(param.confidence_score * 100)}%)
                   </span>
                 </div>
 
@@ -329,29 +299,31 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                     param.source_pages.map((p) => (
                       <span key={p} style={{
                         fontSize: '0.75rem',
-                        fontWeight: 600,
-                        backgroundColor: '#eff6ff',
+                        fontWeight: 700,
+                        backgroundColor: 'rgba(239, 246, 255, 0.85)',
                         color: '#1e40af',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: '0.25rem',
+                        border: '1px solid rgba(191, 219, 254, 0.8)',
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '0.35rem',
+                        backdropFilter: 'blur(4px)',
                       }}>
                         Page {p}
                       </span>
                     ))
                   ) : (
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>No citation</span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No citation</span>
                   )}
                 </div>
               </div>
 
               {/* Body: Extracted Value & Source Excerpt */}
-              <div style={{ marginTop: '0.85rem' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+              <div style={{ marginTop: '0.95rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Extracted Value:
                 </div>
                 
                 {isEditing ? (
-                  <div style={{ marginTop: '0.4rem' }}>
+                  <div style={{ marginTop: '0.5rem' }}>
                     <textarea
                       value={correctedValues[param.parameter_key] ?? (param.final_value || param.extracted_value)}
                       onChange={(e) => setCorrectedValues({
@@ -359,16 +331,14 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                         [param.parameter_key]: e.target.value,
                       })}
                       rows={3}
+                      className="glass-textarea"
                       style={{
                         width: '100%',
-                        padding: '0.6rem',
-                        border: '1px solid #94a3b8',
-                        borderRadius: '0.375rem',
+                        padding: '0.75rem',
                         fontSize: '0.9rem',
-                        color: '#0f172a',
                       }}
                     />
-                    <div style={{ marginTop: '0.4rem' }}>
+                    <div style={{ marginTop: '0.5rem' }}>
                       <input
                         type="text"
                         placeholder="Reviewer rationale / audit comment (e.g. Verified with Clause 4.2)"
@@ -377,12 +347,11 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                           ...reviewerComments,
                           [param.parameter_key]: e.target.value,
                         })}
+                        className="glass-input"
                         style={{
                           width: '100%',
-                          padding: '0.45rem 0.6rem',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.825rem',
+                          padding: '0.55rem 0.75rem',
+                          fontSize: '0.85rem',
                         }}
                       />
                     </div>
@@ -392,8 +361,8 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                     fontSize: '0.95rem',
                     fontWeight: 600,
                     color: isMissing ? '#94a3b8' : (isConflict ? '#c2410c' : '#0f172a'),
-                    marginTop: '0.25rem',
-                    lineHeight: 1.5,
+                    marginTop: '0.35rem',
+                    lineHeight: 1.55,
                   }}>
                     {param.final_value || param.extracted_value}
                   </div>
@@ -402,15 +371,20 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                 {/* Supporting Text Excerpt */}
                 {param.exact_supporting_text && (
                   <div style={{
-                    marginTop: '0.65rem',
-                    backgroundColor: '#f8fafc',
-                    borderLeft: '3px solid #cbd5e1',
-                    padding: '0.5rem 0.75rem',
+                    marginTop: '0.75rem',
+                    backgroundColor: 'rgba(248, 250, 252, 0.75)',
+                    backdropFilter: 'blur(6px)',
+                    borderLeft: '3px solid #3b82f6',
+                    borderTop: '1px solid rgba(226, 232, 240, 0.5)',
+                    borderRight: '1px solid rgba(226, 232, 240, 0.5)',
+                    borderBottom: '1px solid rgba(226, 232, 240, 0.5)',
+                    borderRadius: '0 0.35rem 0.35rem 0',
+                    padding: '0.55rem 0.85rem',
                     fontSize: '0.825rem',
                     color: '#475569',
                     fontStyle: 'italic',
                   }}>
-                    <span style={{ fontWeight: 600, fontStyle: 'normal', color: '#334155' }}>Source Evidence: </span>
+                    <span style={{ fontWeight: 700, fontStyle: 'normal', color: '#1e3a8a' }}>Source Evidence: </span>
                     "{param.exact_supporting_text}"
                   </div>
                 )}
@@ -418,14 +392,15 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                 {/* Warning note if present */}
                 {param.review_reason && (
                   <div style={{
-                    marginTop: '0.5rem',
+                    marginTop: '0.6rem',
                     fontSize: '0.8rem',
                     color: '#b45309',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
+                    gap: '0.45rem',
+                    fontWeight: 500,
                   }}>
-                    <AlertTriangle size={14} />
+                    <AlertTriangle size={15} />
                     <span>{param.review_reason}</span>
                   </div>
                 )}
@@ -436,37 +411,28 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                 display: 'flex',
                 justifyContent: 'flex-end',
                 alignItems: 'center',
-                gap: '0.5rem',
-                marginTop: '1rem',
-                borderTop: '1px solid #f8fafc',
-                paddingTop: '0.75rem',
+                gap: '0.55rem',
+                marginTop: '1.15rem',
+                borderTop: '1px solid rgba(226, 232, 240, 0.6)',
+                paddingTop: '0.85rem',
               }}>
                 {isEditing ? (
                   <>
                     <button
                       onClick={() => setEditingParam(null)}
-                      style={{
-                        padding: '0.4rem 0.85rem',
-                        backgroundColor: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '0.375rem',
-                        fontSize: '0.8rem',
-                        color: '#475569',
-                      }}
+                      className="glass-btn-secondary"
+                      style={{ padding: '0.45rem 0.95rem', fontSize: '0.825rem' }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => handleSaveCorrection(param.parameter_key)}
                       disabled={submitting}
+                      className="glass-btn-primary"
                       style={{
-                        padding: '0.4rem 0.85rem',
-                        backgroundColor: '#16a34a',
-                        border: 'none',
-                        borderRadius: '0.375rem',
-                        fontSize: '0.8rem',
-                        color: '#ffffff',
-                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #15803d, #16a34a)',
+                        padding: '0.45rem 1rem',
+                        fontSize: '0.825rem',
                       }}
                     >
                       Save Correction
@@ -482,18 +448,8 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                           [param.parameter_key]: param.final_value || param.extracted_value,
                         });
                       }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                        padding: '0.35rem 0.75rem',
-                        backgroundColor: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '0.375rem',
-                        fontSize: '0.8rem',
-                        color: '#334155',
-                        fontWeight: 500,
-                      }}
+                      className="glass-btn-secondary"
+                      style={{ padding: '0.4rem 0.85rem', fontSize: '0.825rem' }}
                     >
                       <Edit3 size={14} />
                       Edit Value
@@ -505,13 +461,22 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.3rem',
-                        padding: '0.35rem 0.75rem',
-                        backgroundColor: '#ffffff',
-                        border: '1px solid #fde047',
+                        padding: '0.4rem 0.85rem',
+                        backgroundColor: 'rgba(254, 243, 199, 0.8)',
+                        border: '1px solid rgba(253, 224, 71, 0.85)',
                         borderRadius: '0.375rem',
-                        fontSize: '0.8rem',
+                        fontSize: '0.825rem',
                         color: '#854d0e',
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        backdropFilter: 'blur(6px)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(254, 240, 138, 0.95)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(254, 243, 199, 0.8)';
                       }}
                     >
                       <Flag size={14} />
@@ -524,13 +489,23 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.3rem',
-                        padding: '0.35rem 0.85rem',
-                        backgroundColor: '#dcfce7',
-                        border: '1px solid #86efac',
+                        padding: '0.4rem 0.95rem',
+                        backgroundColor: 'rgba(220, 252, 231, 0.85)',
+                        border: '1px solid rgba(134, 239, 172, 0.9)',
                         borderRadius: '0.375rem',
-                        fontSize: '0.8rem',
-                        color: '#166534',
-                        fontWeight: 600,
+                        fontSize: '0.825rem',
+                        color: '#15803d',
+                        fontWeight: 700,
+                        backdropFilter: 'blur(6px)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 6px rgba(22, 163, 74, 0.1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(187, 247, 208, 0.95)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(220, 252, 231, 0.85)';
                       }}
                     >
                       <Check size={14} />

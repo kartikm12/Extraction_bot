@@ -165,15 +165,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.25rem',
+        marginBottom: '1.5rem',
         flexWrap: 'wrap',
         gap: '1rem',
       }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+          <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>
             Tender Processing Dashboard
           </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.15rem' }}>
             Overview of uploaded tenders, evidence verification audits, and detected clause contradictions.
           </p>
         </div>
@@ -181,47 +181,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
             onClick={onGoToUpload}
+            className="glass-btn-primary"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#1e3a8a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              cursor: 'pointer',
+              padding: '0.6rem 1.25rem',
+              fontSize: '0.9rem',
             }}
           >
-            <UploadCloud size={16} />
+            <UploadCloud size={18} />
             Upload Tender
           </button>
         </div>
       </div>
 
-      {/* KPI Cards Grid - Fitted, aligned, icon-click navigation */}
+      {/* KPI Cards Grid - Glassmorphism cards with smooth hover refraction */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '0.85rem',
-        marginBottom: '1.75rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gap: '1rem',
+        marginBottom: '2rem',
       }}>
         {kpiCards.map((card) => {
           const isActive = filter === card.id;
           return (
             <div
               key={card.id}
+              onClick={() => handleCardClick(card.id)}
+              className="glass-card glass-card-interactive"
               style={{
-                backgroundColor: '#ffffff',
-                padding: '0.9rem 1rem',
-                borderRadius: '0.5rem',
-                border: isActive ? `1.5px solid ${card.activeBorder}` : '1px solid #e2e8f0',
-                boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.06)' : '0 1px 2px rgba(0,0,0,0.04)',
+                padding: '1rem 1.15rem',
+                border: isActive ? `2px solid ${card.activeBorder}` : '1px solid rgba(255, 255, 255, 0.75)',
+                boxShadow: isActive ? `0 8px 24px rgba(31, 38, 135, 0.12), 0 0 0 2px ${card.activeBorder}33` : undefined,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
+                cursor: 'pointer',
               }}
             >
               {/* Top Row: Title on left, Clickable Icon Badge on right */}
@@ -236,7 +229,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   fontWeight: 700,
                   color: card.color,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.025em',
+                  letterSpacing: '0.04em',
                   lineHeight: 1.25,
                   minHeight: '2rem',
                   display: 'flex',
@@ -247,14 +240,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => handleCardClick(card.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick(card.id);
+                  }}
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    minWidth: '32px',
-                    minHeight: '32px',
-                    borderRadius: '0.375rem',
-                    border: 'none',
+                    width: '34px',
+                    height: '34px',
+                    minWidth: '34px',
+                    minHeight: '34px',
+                    borderRadius: '0.5rem',
+                    border: '1px solid rgba(255, 255, 255, 0.8)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -262,17 +258,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     backgroundColor: card.bgColor,
                     color: card.color,
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isActive ? `0 0 0 2px ${card.color}` : 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isActive ? `0 0 0 2px ${card.color}` : '0 2px 6px rgba(0,0,0,0.04)',
                     outline: 'none',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = isActive ? `0 0 0 2px ${card.color}` : 'none';
+                    e.currentTarget.style.boxShadow = isActive ? `0 0 0 2px ${card.color}` : '0 2px 6px rgba(0,0,0,0.04)';
                   }}
                   title={`Click to filter by ${card.label}`}
                   aria-label={`Filter tenders by ${card.label}`}
@@ -283,21 +279,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               {/* Number Metric */}
               <div style={{
-                fontSize: '1.75rem',
-                fontWeight: 700,
+                fontSize: '2rem',
+                fontWeight: 800,
                 color: '#0f172a',
                 lineHeight: 1.1,
                 marginTop: '0.35rem',
                 marginBottom: '0.2rem',
+                letterSpacing: '-0.03em',
               }}>
                 {card.count}
               </div>
 
               {/* Subtitle */}
               <div style={{
-                fontSize: '0.725rem',
+                fontSize: '0.75rem',
                 color: '#64748b',
-                lineHeight: 1.25,
+                lineHeight: 1.3,
+                fontWeight: 500,
               }}>
                 {card.subtitle}
               </div>
@@ -306,31 +304,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
         })}
       </div>
 
-      {/* Recent Processing History Section */}
+      {/* Recent Processing History Section - Glass Panel */}
       <div
         ref={historyRef}
+        className="glass-panel"
         style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '0.5rem',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           overflow: 'hidden',
+          marginBottom: '2rem',
         }}
       >
         <div style={{
-          padding: '1rem 1.25rem',
-          borderBottom: '1px solid #e2e8f0',
+          padding: '1.15rem 1.4rem',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.7)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.75rem',
+          gap: '0.85rem',
+          background: 'rgba(255, 255, 255, 0.45)',
         }}>
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               Recent Processing History
             </h2>
-            <p style={{ fontSize: '0.8rem', color: '#64748b' }}>
+            <p style={{ fontSize: '0.825rem', color: '#64748b' }}>
               Audit trail of ingested tender documents and extraction status.
             </p>
           </div>
@@ -340,14 +337,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               onClick={() => setFilter('all')}
               style={{
-                fontSize: '0.75rem',
+                fontSize: '0.775rem',
                 fontWeight: 600,
-                padding: '0.25rem 0.65rem',
+                padding: '0.3rem 0.75rem',
                 borderRadius: '9999px',
-                border: filter === 'all' ? '1px solid #1e3a8a' : '1px solid #e2e8f0',
-                backgroundColor: filter === 'all' ? '#1e3a8a' : '#ffffff',
+                border: filter === 'all' ? '1px solid #1e3a8a' : '1px solid rgba(203, 213, 225, 0.7)',
+                backgroundColor: filter === 'all' ? '#1e3a8a' : 'rgba(255, 255, 255, 0.6)',
                 color: filter === 'all' ? '#ffffff' : '#475569',
+                backdropFilter: 'blur(6px)',
                 cursor: 'pointer',
+                boxShadow: filter === 'all' ? '0 2px 8px rgba(30, 58, 138, 0.25)' : 'none',
               }}
             >
               All ({stats?.total_processed ?? 0})
@@ -355,14 +354,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               onClick={() => setFilter('verified')}
               style={{
-                fontSize: '0.75rem',
+                fontSize: '0.775rem',
                 fontWeight: 600,
-                padding: '0.25rem 0.65rem',
+                padding: '0.3rem 0.75rem',
                 borderRadius: '9999px',
-                border: filter === 'verified' ? '1px solid #16a34a' : '1px solid #e2e8f0',
-                backgroundColor: filter === 'verified' ? '#16a34a' : '#ffffff',
+                border: filter === 'verified' ? '1px solid #16a34a' : '1px solid rgba(203, 213, 225, 0.7)',
+                backgroundColor: filter === 'verified' ? '#16a34a' : 'rgba(255, 255, 255, 0.6)',
                 color: filter === 'verified' ? '#ffffff' : '#166534',
+                backdropFilter: 'blur(6px)',
                 cursor: 'pointer',
+                boxShadow: filter === 'verified' ? '0 2px 8px rgba(22, 163, 74, 0.25)' : 'none',
               }}
             >
               Verified ({stats?.successfully_processed ?? 0})
@@ -370,14 +371,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               onClick={() => setFilter('review')}
               style={{
-                fontSize: '0.75rem',
+                fontSize: '0.775rem',
                 fontWeight: 600,
-                padding: '0.25rem 0.65rem',
+                padding: '0.3rem 0.75rem',
                 borderRadius: '9999px',
-                border: filter === 'review' ? '1px solid #d97706' : '1px solid #e2e8f0',
-                backgroundColor: filter === 'review' ? '#d97706' : '#ffffff',
+                border: filter === 'review' ? '1px solid #d97706' : '1px solid rgba(203, 213, 225, 0.7)',
+                backgroundColor: filter === 'review' ? '#d97706' : 'rgba(255, 255, 255, 0.6)',
                 color: filter === 'review' ? '#ffffff' : '#92400e',
+                backdropFilter: 'blur(6px)',
                 cursor: 'pointer',
+                boxShadow: filter === 'review' ? '0 2px 8px rgba(217, 119, 6, 0.25)' : 'none',
               }}
             >
               Needs Review ({stats?.requiring_review ?? 0})
@@ -385,14 +388,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               onClick={() => setFilter('conflicts')}
               style={{
-                fontSize: '0.75rem',
+                fontSize: '0.775rem',
                 fontWeight: 600,
-                padding: '0.25rem 0.65rem',
+                padding: '0.3rem 0.75rem',
                 borderRadius: '9999px',
-                border: filter === 'conflicts' ? '1px solid #ea580c' : '1px solid #e2e8f0',
-                backgroundColor: filter === 'conflicts' ? '#ea580c' : '#ffffff',
+                border: filter === 'conflicts' ? '1px solid #ea580c' : '1px solid rgba(203, 213, 225, 0.7)',
+                backgroundColor: filter === 'conflicts' ? '#ea580c' : 'rgba(255, 255, 255, 0.6)',
                 color: filter === 'conflicts' ? '#ffffff' : '#c2410c',
+                backdropFilter: 'blur(6px)',
                 cursor: 'pointer',
+                boxShadow: filter === 'conflicts' ? '0 2px 8px rgba(234, 88, 12, 0.25)' : 'none',
               }}
             >
               Conflicts ({stats?.with_conflicts ?? 0})
@@ -406,10 +411,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '0.5rem 1.25rem',
-            backgroundColor: activeCard?.bgColor || '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
+            padding: '0.55rem 1.4rem',
+            backgroundColor: activeCard?.bgColor || 'rgba(248, 250, 252, 0.75)',
+            borderBottom: '1px solid rgba(226, 232, 240, 0.7)',
             fontSize: '0.8rem',
+            backdropFilter: 'blur(8px)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Filter size={14} style={{ color: activeCard?.color || '#475569' }} />
@@ -440,14 +446,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Table Content */}
         {filteredHistory.length === 0 ? (
-          <div style={{ padding: '3rem 1.5rem', textAlign: 'center', color: '#64748b' }}>
-            <FileText size={36} style={{ color: '#cbd5e1', marginBottom: '0.75rem' }} />
-            <div style={{ fontWeight: 600, color: '#334155' }}>
+          <div style={{ padding: '3.5rem 1.5rem', textAlign: 'center', color: '#64748b' }}>
+            <FileText size={40} style={{ color: '#cbd5e1', marginBottom: '0.85rem' }} />
+            <div style={{ fontWeight: 700, color: '#334155', fontSize: '1rem' }}>
               {filter === 'all'
                 ? 'No tender documents processed yet'
                 : `No tenders found in "${activeCard?.label || filter}"`}
             </div>
-            <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <p style={{ fontSize: '0.875rem', marginTop: '0.35rem', color: '#64748b' }}>
               {filter === 'all'
                 ? 'Click "Upload Tender" to ingest your first government RFP or tender specification.'
                 : 'All documents in the system are currently under other stages.'}
@@ -455,16 +461,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {filter !== 'all' && (
               <button
                 onClick={() => setFilter('all')}
+                className="glass-btn-primary"
                 style={{
-                  marginTop: '1rem',
-                  padding: '0.45rem 1rem',
-                  backgroundColor: '#1e3a8a',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '0.375rem',
+                  marginTop: '1.25rem',
+                  padding: '0.5rem 1.15rem',
                   fontSize: '0.825rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
                 }}
               >
                 View All Tenders
@@ -475,14 +476,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 600 }}>
-                  <th style={{ padding: '0.75rem 1rem' }}>Document ID</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Original Filename</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Format</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Pages</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Stage</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Status & Findings</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Action</th>
+                <tr className="glass-th">
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Document ID</th>
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Original Filename</th>
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Format</th>
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Pages</th>
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Stage</th>
+                  <th style={{ padding: '0.85rem 1.15rem' }}>Status & Findings</th>
+                  <th style={{ padding: '0.85rem 1.15rem', textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -490,104 +491,71 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   return (
                     <tr
                       key={doc.document_id}
-                      style={{
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background-color 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      className="glass-tr"
                     >
-                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#1e3a8a' }}>
+                      <td style={{ padding: '0.9rem 1.15rem', fontWeight: 700, color: '#1e3a8a' }}>
                         {doc.document_id}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '0.9rem 1.15rem', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500, color: '#1e293b' }}>
                         {doc.original_filename}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
+                      <td style={{ padding: '0.9rem 1.15rem' }}>
                         <span style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '0.25rem',
-                          backgroundColor: doc.file_type === 'pdf' ? '#eff6ff' : '#f0fdf4',
+                          fontSize: '0.725rem',
+                          fontWeight: 700,
+                          padding: '0.2rem 0.55rem',
+                          borderRadius: '0.35rem',
+                          backgroundColor: doc.file_type === 'pdf' ? 'rgba(239, 246, 255, 0.85)' : 'rgba(240, 253, 244, 0.85)',
                           color: doc.file_type === 'pdf' ? '#1e40af' : '#166534',
+                          border: doc.file_type === 'pdf' ? '1px solid rgba(191, 219, 254, 0.7)' : '1px solid rgba(187, 247, 208, 0.7)',
+                          backdropFilter: 'blur(4px)',
                           textTransform: 'uppercase',
+                          letterSpacing: '0.025em',
                         }}>
                           {doc.file_type}
                         </span>
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#64748b' }}>
+                      <td style={{ padding: '0.9rem 1.15rem', color: '#64748b', fontWeight: 500 }}>
                         {doc.page_count || '—'}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: '#334155' }}>
+                      <td style={{ padding: '0.9rem 1.15rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: '#334155', fontWeight: 500 }}>
                           {doc.current_stage}
                         </span>
                       </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
+                      <td style={{ padding: '0.9rem 1.15rem' }}>
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                           {doc.has_conflicts && (
-                            <span style={{
+                            <span className="glass-badge-conflict" style={{
                               fontSize: '0.7rem',
-                              fontWeight: 700,
-                              backgroundColor: '#ffedd5',
-                              color: '#c2410c',
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '9999px',
+                              padding: '0.2rem 0.55rem',
                             }}>
                               Conflict
                             </span>
                           )}
                           {doc.requires_human_review && (
-                            <span style={{
+                            <span className="glass-badge-review" style={{
                               fontSize: '0.7rem',
-                              fontWeight: 600,
-                              backgroundColor: '#fef3c7',
-                              color: '#92400e',
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '9999px',
+                              padding: '0.2rem 0.55rem',
                             }}>
                               Needs Review
                             </span>
                           )}
                           {doc.is_fully_verified && (
-                            <span style={{
+                            <span className="glass-badge-verified" style={{
                               fontSize: '0.7rem',
-                              fontWeight: 600,
-                              backgroundColor: '#dcfce7',
-                              color: '#166534',
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '9999px',
+                              padding: '0.2rem 0.55rem',
                             }}>
                               Verified
                             </span>
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                      <td style={{ padding: '0.9rem 1.15rem', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => onSelectDocument(doc.document_id, doc.is_fully_verified && !doc.has_conflicts ? 'results' : 'review')}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                              padding: '0.35rem 0.75rem',
-                              backgroundColor: '#eff6ff',
-                              color: '#1e3a8a',
-                              border: '1px solid #bfdbfe',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#dbeafe';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#eff6ff';
-                            }}
+                            className="glass-btn-action"
                           >
                             <Eye size={14} />
                             {doc.is_fully_verified && !doc.has_conflicts ? 'View Report' : 'Review'}
@@ -600,30 +568,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             disabled={deletingId === doc.document_id}
                             title="Delete from history"
                             aria-label="Delete tender from history"
+                            className="glass-btn-delete"
                             style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '0.35rem 0.45rem',
-                              backgroundColor: '#fef2f2',
-                              color: '#dc2626',
-                              border: '1px solid #fecaca',
-                              borderRadius: '0.375rem',
                               cursor: deletingId === doc.document_id ? 'not-allowed' : 'pointer',
                               opacity: deletingId === doc.document_id ? 0.5 : 1,
-                              transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (deletingId !== doc.document_id) {
-                                e.currentTarget.style.backgroundColor = '#fee2e2';
-                                e.currentTarget.style.borderColor = '#f87171';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (deletingId !== doc.document_id) {
-                                e.currentTarget.style.backgroundColor = '#fef2f2';
-                                e.currentTarget.style.borderColor = '#fecaca';
-                              }
                             }}
                           >
                             <Trash2 size={14} />

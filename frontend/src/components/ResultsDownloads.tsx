@@ -51,7 +51,7 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.5rem',
+        marginBottom: '1.75rem',
         flexWrap: 'wrap',
         gap: '1rem',
       }}>
@@ -61,28 +61,32 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.3rem',
+              gap: '0.35rem',
               background: 'none',
               border: 'none',
               color: '#64748b',
               fontSize: '0.825rem',
+              fontWeight: 600,
               cursor: 'pointer',
-              marginBottom: '0.25rem',
+              marginBottom: '0.35rem',
+              transition: 'color 0.15s ease',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#1e3a8a')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
           >
             <ArrowLeft size={14} /> Back to Dashboard
           </button>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+          <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>
             Reports & Artifact Downloads
           </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
-            Production Microsoft Word summary and Excel evidence verification logs for Tender <strong>{record.document_id}</strong>.
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.15rem' }}>
+            Production Microsoft Word summary and Excel evidence verification logs for Tender <strong style={{ color: '#1e3a8a' }}>{record.document_id}</strong>.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {regenSuccess && (
-            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 700 }}>
               ✓ Document re-checked & reports regenerated!
             </span>
           )}
@@ -90,20 +94,7 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           <button
             onClick={handleRegenerate}
             disabled={regenerating}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1rem',
-              backgroundColor: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              color: '#334155',
-              cursor: regenerating ? 'not-allowed' : 'pointer',
-              opacity: regenerating ? 0.7 : 1,
-            }}
+            className="glass-btn-secondary"
             title="Re-checks the uploaded document, extracts and verifies all 12 parameters afresh, and regenerates Word and Excel reports"
           >
             <RefreshCw size={15} className={regenerating ? 'pulsing' : ''} />
@@ -112,17 +103,9 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
 
           <button
             onClick={onGoToReview}
+            className="glass-btn-primary"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1rem',
-              backgroundColor: '#eff6ff',
-              color: '#1e3a8a',
-              border: '1px solid #bfdbfe',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 600,
+              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.85) 0%, rgba(59, 130, 246, 0.85) 100%)',
             }}
           >
             Edit & Review Clauses
@@ -135,34 +118,35 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '1.25rem',
-        marginBottom: '2rem',
+        marginBottom: '2.25rem',
       }}>
         {/* Word Document Download Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '0.5rem',
-          border: '1px solid #bfdbfe',
-          padding: '1.5rem',
-          boxShadow: '0 2px 4px rgba(30,58,138,0.06)',
+        <div className="glass-card glass-card-interactive" style={{
+          padding: '1.65rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          borderColor: 'rgba(191, 219, 254, 0.85)',
+          background: 'rgba(239, 246, 255, 0.65)',
         }}>
           <div>
             <div style={{
               display: 'inline-flex',
-              padding: '0.5rem',
-              backgroundColor: '#eff6ff',
+              padding: '0.65rem',
+              backgroundColor: 'rgba(219, 234, 254, 0.8)',
+              backdropFilter: 'blur(6px)',
               color: '#1e3a8a',
-              borderRadius: '0.375rem',
-              marginBottom: '0.75rem',
+              borderRadius: '0.5rem',
+              marginBottom: '0.85rem',
+              border: '1px solid rgba(191, 219, 254, 0.9)',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.12)',
             }}>
-              <FileText size={24} />
+              <FileText size={26} />
             </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               Microsoft Word Summary (.docx)
             </h2>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem' }}>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem', lineHeight: 1.45 }}>
               Official 1-page executive summary formatted strictly to the 12 parameters in high-contrast government table layout.
             </p>
           </div>
@@ -170,19 +154,11 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           <a
             href={apiClient.getWordDownloadUrl(record.document_id)}
             download
+            className="glass-btn-primary"
             style={{
-              marginTop: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              padding: '0.65rem 1rem',
-              backgroundColor: '#1e3a8a',
-              color: '#ffffff',
-              borderRadius: '0.375rem',
+              marginTop: '1.35rem',
               textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
+              padding: '0.65rem 1rem',
             }}
           >
             <Download size={16} />
@@ -191,31 +167,32 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         </div>
 
         {/* Excel Verification Log Download Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '0.5rem',
-          border: '1px solid #bbf7d0',
-          padding: '1.5rem',
-          boxShadow: '0 2px 4px rgba(22,101,52,0.06)',
+        <div className="glass-card glass-card-interactive" style={{
+          padding: '1.65rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          borderColor: 'rgba(187, 247, 208, 0.85)',
+          background: 'rgba(240, 253, 244, 0.65)',
         }}>
           <div>
             <div style={{
               display: 'inline-flex',
-              padding: '0.5rem',
-              backgroundColor: '#dcfce7',
+              padding: '0.65rem',
+              backgroundColor: 'rgba(220, 252, 231, 0.8)',
+              backdropFilter: 'blur(6px)',
               color: '#16a34a',
-              borderRadius: '0.375rem',
-              marginBottom: '0.75rem',
+              borderRadius: '0.5rem',
+              marginBottom: '0.85rem',
+              border: '1px solid rgba(187, 247, 208, 0.9)',
+              boxShadow: '0 4px 12px rgba(22, 163, 74, 0.12)',
             }}>
-              <ShieldCheck size={24} />
+              <ShieldCheck size={26} />
             </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               Excel Verification Log (.xlsx)
             </h2>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem' }}>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem', lineHeight: 1.45 }}>
               Full audit workbook with 16 structured columns, exact page citations, verbatim quotes, and conflicting evidence breakdowns.
             </p>
           </div>
@@ -223,19 +200,13 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           <a
             href={apiClient.getXlsxDownloadUrl(record.document_id)}
             download
+            className="glass-btn-primary"
             style={{
-              marginTop: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              padding: '0.65rem 1rem',
-              backgroundColor: '#16a34a',
-              color: '#ffffff',
-              borderRadius: '0.375rem',
+              marginTop: '1.35rem',
+              background: 'linear-gradient(135deg, rgba(22, 101, 52, 0.95), rgba(22, 163, 74, 0.9))',
+              boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)',
               textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
+              padding: '0.65rem 1rem',
             }}
           >
             <Download size={16} />
@@ -244,31 +215,32 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
         </div>
 
         {/* Machine-Readable JSON Download Card */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '0.5rem',
-          border: '1px solid #e2e8f0',
-          padding: '1.5rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+        <div className="glass-card glass-card-interactive" style={{
+          padding: '1.65rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          borderColor: 'rgba(226, 232, 240, 0.85)',
+          background: 'rgba(248, 250, 252, 0.65)',
         }}>
           <div>
             <div style={{
               display: 'inline-flex',
-              padding: '0.5rem',
-              backgroundColor: '#f1f5f9',
+              padding: '0.65rem',
+              backgroundColor: 'rgba(241, 245, 249, 0.85)',
+              backdropFilter: 'blur(6px)',
               color: '#475569',
-              borderRadius: '0.375rem',
-              marginBottom: '0.75rem',
+              borderRadius: '0.5rem',
+              marginBottom: '0.85rem',
+              border: '1px solid rgba(226, 232, 240, 0.9)',
+              boxShadow: '0 4px 12px rgba(100, 116, 139, 0.1)',
             }}>
-              <ExternalLink size={24} />
+              <ExternalLink size={26} />
             </div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               Audit Data JSON (.json)
             </h2>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem' }}>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.35rem', lineHeight: 1.45 }}>
               Machine-readable schema export for enterprise database integration, ERP workflows, and downstream tender pipelines.
             </p>
           </div>
@@ -276,19 +248,13 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
           <a
             href={apiClient.getJsonDownloadUrl(record.document_id)}
             download
+            className="glass-btn-primary"
             style={{
-              marginTop: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              padding: '0.65rem 1rem',
-              backgroundColor: '#334155',
-              color: '#ffffff',
-              borderRadius: '0.375rem',
+              marginTop: '1.35rem',
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(71, 85, 105, 0.9))',
+              boxShadow: '0 4px 14px rgba(51, 65, 85, 0.3)',
               textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
+              padding: '0.65rem 1rem',
             }}
           >
             <Download size={16} />
@@ -298,75 +264,74 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
       </div>
 
       {/* Visual Word Document Preview */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '0.5rem',
-        border: '1px solid #e2e8f0',
-        padding: '2rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      <div className="glass-panel" style={{
+        padding: '2.25rem',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #1e3a8a', paddingBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.02em' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem', borderBottom: '2px solid rgba(30, 58, 138, 0.4)', paddingBottom: '1.15rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.01em' }}>
             {parameters.authority?.final_value || parameters.authority?.extracted_value || 'TENDER ANALYSIS & EXECUTIVE SUMMARY'}
           </h2>
         </div>
 
         {/* 12-Parameter Table Preview */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#1e3a8a', color: '#ffffff', textAlign: 'left' }}>
-              <th style={{ padding: '0.75rem 1rem', width: '28%', border: '1px solid #1e3a8a', letterSpacing: '0.04em' }}>
-                PARAMETER
-              </th>
-              <th style={{ padding: '0.75rem 1rem', width: '72%', border: '1px solid #1e3a8a', letterSpacing: '0.04em' }}>
-                DETAILS
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {ORDERED_KEYS.map((key, idx) => {
-              const param = parameters[key];
-              const isMissing = !param || param.extracted_value === '—' || param.status === 'Missing from source';
-              const isConflict = param?.conflict_status || param?.status === 'Conflicting';
-              const val = param?.final_value || param?.extracted_value || '—';
+        <div style={{ overflowX: 'auto', borderRadius: '0.5rem', border: '1px solid rgba(226, 232, 240, 0.7)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead>
+              <tr style={{ background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(37, 99, 235, 0.9))', color: '#ffffff', textAlign: 'left' }}>
+                <th style={{ padding: '0.85rem 1.15rem', width: '28%', border: '1px solid rgba(30, 58, 138, 0.3)', letterSpacing: '0.04em', fontWeight: 700 }}>
+                  PARAMETER
+                </th>
+                <th style={{ padding: '0.85rem 1.15rem', width: '72%', border: '1px solid rgba(30, 58, 138, 0.3)', letterSpacing: '0.04em', fontWeight: 700 }}>
+                  DETAILS
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ORDERED_KEYS.map((key, idx) => {
+                const param = parameters[key];
+                const isMissing = !param || param.extracted_value === '—' || param.status === 'Missing from source';
+                const isConflict = param?.conflict_status || param?.status === 'Conflicting';
+                const val = param?.final_value || param?.extracted_value || '—';
 
-              return (
-                <tr
-                  key={key}
-                  style={{
-                    backgroundColor: idx % 2 === 1 ? '#f8fafc' : '#ffffff',
-                    borderBottom: '1px solid #e2e8f0',
-                  }}
-                >
-                  <td style={{
-                    padding: '0.65rem 1rem',
-                    fontWeight: 700,
-                    color: '#1e293b',
-                    border: '1px solid #e2e8f0',
-                    verticalAlign: 'top',
-                  }}>
-                    {param?.display_name || key}
-                  </td>
-                  <td style={{
-                    padding: '0.65rem 1rem',
-                    color: isMissing ? '#94a3b8' : '#0f172a',
-                    border: '1px solid #e2e8f0',
-                    verticalAlign: 'top',
-                    lineHeight: 1.5,
-                    whiteSpace: 'pre-line',
-                  }}>
-                    {isConflict && (
-                      <div style={{ color: '#c2410c', fontWeight: 700, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                        [CONFLICT DETECTED - REQUIRES REVIEW]
-                      </div>
-                    )}
-                    <div>{val}</div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr
+                    key={key}
+                    style={{
+                      backgroundColor: idx % 2 === 1 ? 'rgba(248, 250, 252, 0.55)' : 'rgba(255, 255, 255, 0.55)',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                  >
+                    <td style={{
+                      padding: '0.75rem 1.15rem',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      border: '1px solid rgba(226, 232, 240, 0.7)',
+                      verticalAlign: 'top',
+                    }}>
+                      {param?.display_name || key}
+                    </td>
+                    <td style={{
+                      padding: '0.75rem 1.15rem',
+                      color: isMissing ? '#94a3b8' : '#0f172a',
+                      border: '1px solid rgba(226, 232, 240, 0.7)',
+                      verticalAlign: 'top',
+                      lineHeight: 1.55,
+                      whiteSpace: 'pre-line',
+                      fontWeight: 500,
+                    }}>
+                      {isConflict && (
+                        <div style={{ color: '#c2410c', fontWeight: 800, fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                          [CONFLICT DETECTED - REQUIRES REVIEW]
+                        </div>
+                      )}
+                      <div>{val}</div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         <div style={{
           marginTop: '1.5rem',
