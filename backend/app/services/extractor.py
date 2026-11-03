@@ -9,6 +9,7 @@ from backend.app.models.schemas import (
 )
 from backend.app.services.parser import ParsedDocument, ParsedPage
 from backend.app.utils.text_tools import normalize_text, extract_dates, extract_currency_amounts
+from backend.app.services.gemini_extractor import gemini_extraction_service
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,14 @@ class ExtractionEngine:
         self.provider = settings.AI_PROVIDER
 
     def extract_parameters(self, doc: ParsedDocument) -> Dict[str, ParameterExtraction]:
+        # Priority 1: High-Precision Universal AI Document Intelligence
+        if self.provider in ["gemini", "hybrid"] and gemini_extraction_service.is_available():
+            try:
+                ai_results = gemini_extraction_service.extract_parameters(doc)
+                if ai_results:
+                    return ai_results
+            except Exception as e:
+                logger.warning(f"AI extraction failed or unavailable, falling back to rule-based engine: {e}")
         candidates_by_param: Dict[ParameterKey, List[CandidateExtraction]] = {
             k: [] for k in ORDERED_PARAMETER_KEYS
         }
