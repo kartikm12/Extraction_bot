@@ -40,6 +40,13 @@
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 30%, #eef2ff 65%, #faf5ff 100%);
@@ -47,9 +54,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
 }
 
 /* Ambient glowing orbs behind frosted glass panels */
@@ -88,9 +93,23 @@ body::after {
 #root {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.app-main-content {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  scroll-behavior: smooth;
+  scroll-padding-top: 1rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 button {
@@ -149,11 +168,14 @@ input, textarea, select {
 }
 
 .glass-navbar {
-  background: rgba(255, 255, 255, 0.76);
+  position: relative;
+  z-index: 1000;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: var(--glass-blur-lg);
   -webkit-backdrop-filter: var(--glass-blur-lg);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.05);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.06);
 }
 
 .glass-footer {

@@ -1,10 +1,12 @@
 import os
 import re
+import struct
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import fitz  # PyMuPDF
 import docx
+import olefile
 from backend.app.config import settings
 from backend.app.models.schemas import PageMetadata
 from backend.app.services.ocr_engine import ocr_engine
@@ -65,8 +67,18 @@ class DocumentParser:
         ext = file_path.suffix.lower()
         if ext == ".pdf":
             return DocumentParser._parse_pdf(file_path)
-        elif ext in [".docx", ".doc"]:
-            return DocumentParser._parse_docx(file_path)
+        elif ext == ".docx":
+            try:
+                return DocumentParser._parse_docx(file_path)
+            except Exception as e:
+                logger.warning(f"Error parsing with docx parser ({e}), attempting binary doc fallback.")
+                return DocumentParser._parse_doc_binary(file_path)
+        elif ext == ".doc":
+            try:
+                return DocumentParser._parse_doc_binary(file_path)
+            except Exception as e:
+                logger.warning(f"Error parsing with binary doc parser ({e}), attempting docx fallback.")
+                return DocumentParser._parse_docx(file_path)
         else:
             raise ValueError(f"Unsupported file format: {ext}")
 
@@ -214,4 +226,139 @@ class DocumentParser:
             pages.append(ParsedPage(page_number=1, text=""))
 
         return ParsedDocument(filename=file_path.name, file_type="docx", pages=pages)
+
+    @staticmethod
+    def _parse_doc_binary(file_path: Path) -> ParsedDocument:
+        """
+        Parses Microsoft Word 97-2003 binary (.doc) documents using OLE2 Compound File
+        and piece table decoding, with heuristic table and page break reconstruction.
+        """
+        full_text = ""
+        try:
+            if olefile.isOleFile(file_path):
+                ole = olefile.OleFileIO(file_path)
+                if ole.exists('WordDocument'):
+                    word = ole.openstream('WordDocument').read()
+                    flags = struct.unpack('<H', word[0x0A:0x0C])[0]
+                    table_name = '1Table' if (flags & 0x0200) else '0Table'
+                    if ole.exists(table_name):
+                        table = ole.openstream(table_name).read()
+                        if len(word) >= 0x01AA:
+                            fcClx, lcbClx = struct.unpack('<II', word[0x01A2:0x01AA])
+                            clx = table[fcClx : fcClx + lcbClx]
+                            pos = 0
+                            while pos < len(clx):
+                                clxt = clx[pos]
+                                if clxt == 0x01:
+                                    cbGrpprl = struct.unpack('<H', clx[pos+1:pos+3])[0]
+                                    pos += 3 + cbGrpprl
+                                elif clxt == 0x02:
+                                    lcb = struct.unpack('<I', clx[pos+1:pos+5])[0]
+                                    pcd_data = clx[pos+5 : pos+5+lcb]
+                                    n = (lcb - 4) // 12
+                                    cps = [struct.unpack('<I', pcd_data[i*4:(i+1)*4])[0] for i in range(n+1)]
+                                    pcds_offset = (n+1)*4
+                                    pieces = []
+                                    for i in range(n):
+                                        cp_start = cps[i]
+                                        cp_end = cps[i+1]
+                                        pcd = pcd_data[pcds_offset + i*8 : pcds_offset + (i+1)*8]
+                                        fc = struct.unpack('<I', pcd[2:6])[0]
+                                        fCompressed = bool(fc & 0x40000000)
+                                        fcOffset = fc & ~0x40000000
+                                        char_count = cp_end - cp_start
+                                        if fCompressed:
+                                            actual_offset = fcOffset // 2
+                                            raw = word[actual_offset : actual_offset + char_count]
+                                            text = raw.decode('latin-1', errors='ignore')
+                                        else:
+                                            actual_offset = fcOffset
+                                            raw = word[actual_offset : actual_offset + char_count * 2]
+                                            text = raw.decode('utf-16le', errors='ignore')
+                                        pieces.append(text)
+                                    full_text = ''.join(pieces)
+                                    break
+                                else:
+                                    break
+        except Exception as e:
+            logger.warning(f"Piece table extraction failed for {file_path.name}: {e}")
+
+        if not full_text or len(full_text.strip()) < 50:
+            # Fallback raw extraction for damaged or non-standard OLE streams
+            with open(file_path, 'rb') as f:
+                data = f.read()
+            raw_ascii = [s.decode('latin-1', errors='ignore') for s in re.findall(b'[\x20-\x7e\n\r\t]{6,}', data)]
+            full_text = '\n'.join(raw_ascii)
+
+        # Normalize line endings and cell boundaries
+        # In Word binary: \x07 is table cell delimiter, \x0c is form feed / page break
+        full_text = full_text.replace('\r\n', '\n').replace('\r', '\n')
+        # Split into pages by form-feed
+        raw_page_chunks = full_text.split('\x0c')
+        
+        pages: List[ParsedPage] = []
+        page_num = 1
+
+        for chunk in raw_page_chunks:
+            chunk_clean = chunk.strip()
+            if not chunk_clean:
+                continue
+
+            # Detect lines and tables
+            lines = [l.strip() for l in chunk_clean.split('\n') if l.strip()]
+            headings = []
+            tables_data = []
+            cleaned_page_lines = []
+
+            for line in lines:
+                # If line has \x07 cell separators or pipe characters
+                if '\x07' in line or ' | ' in line:
+                    cells = [c.strip() for c in re.split(r'[\x07|]', line) if c.strip()]
+                    if len(cells) > 1:
+                        tables_data.append([cells])
+                        cleaned_page_lines.append(" | ".join(cells))
+                        continue
+                clean_l = line.replace('\x07', ' ')
+                cleaned_page_lines.append(clean_l)
+                if (len(clean_l) < 80 and clean_l.isupper()) or clean_l.lower().startswith(('section', 'clause', 'annexure', 'schedule', 'table', 'nit', 'part')):
+                    headings.append(clean_l)
+
+            page_text = normalize_text("\n".join(cleaned_page_lines))
+            
+            # If a single chunk is extremely long (>4500 chars), split into sub-pages
+            if len(page_text) > 4500:
+                paragraphs = page_text.split('\n\n')
+                sub_text = []
+                for p in paragraphs:
+                    sub_text.append(p)
+                    if sum(len(x) for x in sub_text) >= 3000:
+                        pages.append(ParsedPage(
+                            page_number=page_num,
+                            text="\n\n".join(sub_text),
+                            tables=tables_data,
+                            headings=headings
+                        ))
+                        page_num += 1
+                        sub_text = []
+                if sub_text:
+                    pages.append(ParsedPage(
+                        page_number=page_num,
+                        text="\n\n".join(sub_text),
+                        tables=tables_data,
+                        headings=headings
+                    ))
+                    page_num += 1
+            else:
+                pages.append(ParsedPage(
+                    page_number=page_num,
+                    text=page_text,
+                    tables=tables_data,
+                    headings=headings
+                ))
+                page_num += 1
+
+        if not pages:
+            pages.append(ParsedPage(page_number=1, text=""))
+
+        return ParsedDocument(filename=file_path.name, file_type="doc", pages=pages)
 

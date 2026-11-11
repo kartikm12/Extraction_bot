@@ -16,10 +16,15 @@ export const App: React.FC = () => {
   const [activeRecord, setActiveRecord] = useState<DocumentProcessingRecord | null>(null);
   const [loadingRecord, setLoadingRecord] = useState<boolean>(false);
   const activeDocIdRef = useRef<string | null>(null);
+  const mainScrollRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     activeDocIdRef.current = activeDocId;
   }, [activeDocId]);
+
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentTab]);
 
   const fetchStats = async (silent = false) => {
     if (!silent) setLoadingStats(true);
@@ -143,7 +148,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Navbar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
@@ -151,72 +156,75 @@ export const App: React.FC = () => {
         hasConflicts={activeRecord?.has_conflicts}
       />
 
-      <main style={{ flexGrow: 1, paddingBottom: '3rem' }}>
-        {currentTab === 'dashboard' && (
-          <Dashboard
-            stats={stats}
-            loading={loadingStats}
-            onRefresh={() => fetchStats()}
-            onSelectDocument={handleSelectDocument}
-            onGoToUpload={() => setCurrentTab('upload')}
-          />
-        )}
+      <main ref={mainScrollRef} className="app-main-content">
+        <div style={{ flex: '1 0 auto', paddingBottom: '2.5rem' }}>
+          {currentTab === 'dashboard' && (
+            <Dashboard
+              stats={stats}
+              loading={loadingStats}
+              onRefresh={() => fetchStats()}
+              onSelectDocument={handleSelectDocument}
+              onGoToUpload={() => setCurrentTab('upload')}
+            />
+          )}
 
-        {currentTab === 'upload' && (
-          <UploadModal
-            onUploadSuccess={handleUploadSuccess}
-            onCancel={() => setCurrentTab('dashboard')}
-          />
-        )}
+          {currentTab === 'upload' && (
+            <UploadModal
+              onUploadSuccess={handleUploadSuccess}
+              onCancel={() => setCurrentTab('dashboard')}
+            />
+          )}
 
-        {currentTab === 'status' && activeDocId && (
-          <ProcessingStatus
-            documentId={activeDocId}
-            onProceedToReview={() => {
-              fetchActiveRecord(activeDocId);
-              setCurrentTab('review');
-            }}
-            onProceedToResults={() => {
-              fetchActiveRecord(activeDocId);
-              setCurrentTab('results');
-            }}
-          />
-        )}
+          {currentTab === 'status' && activeDocId && (
+            <ProcessingStatus
+              documentId={activeDocId}
+              onProceedToReview={() => {
+                fetchActiveRecord(activeDocId);
+                setCurrentTab('review');
+              }}
+              onProceedToResults={() => {
+                fetchActiveRecord(activeDocId);
+                setCurrentTab('results');
+              }}
+            />
+          )}
 
-        {currentTab === 'review' && activeRecord && (
-          <ExtractionReview
-            record={activeRecord}
-            onRefresh={() => fetchActiveRecord(activeRecord.document_id)}
-            onProceedToResults={() => setCurrentTab('results')}
-          />
-        )}
+          {currentTab === 'review' && activeRecord && (
+            <ExtractionReview
+              record={activeRecord}
+              onRefresh={() => fetchActiveRecord(activeRecord.document_id)}
+              onProceedToResults={() => setCurrentTab('results')}
+            />
+          )}
 
-        {currentTab === 'results' && activeRecord && (
-          <ResultsDownloads
-            record={activeRecord}
-            onGoToReview={() => setCurrentTab('review')}
-            onGoToDashboard={() => {
-              fetchStats();
-              setCurrentTab('dashboard');
-            }}
-            onRefresh={() => fetchActiveRecord(activeRecord.document_id)}
-          />
-        )}
+          {currentTab === 'results' && activeRecord && (
+            <ResultsDownloads
+              record={activeRecord}
+              onGoToReview={() => setCurrentTab('review')}
+              onGoToDashboard={() => {
+                fetchStats();
+                setCurrentTab('dashboard');
+              }}
+              onRefresh={() => fetchActiveRecord(activeRecord.document_id)}
+            />
+          )}
+        </div>
+
+        <footer className="glass-footer" style={{
+          marginTop: 'auto',
+          padding: '1.25rem 1.5rem',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          color: '#475569',
+        }}>
+          <div style={{ fontWeight: 500 }}>
+            Tender Docs Analysis and Extraction Bot • Production Release v1.0.0
+          </div>
+          <div style={{ marginTop: '0.2rem', fontSize: '0.75rem', color: '#64748b' }}>
+            Constrained 12-parameter schema • Deterministic & LLM-Powered Evidence Verification • Audit-Grade Document Intelligence
+          </div>
+        </footer>
       </main>
-
-      <footer className="glass-footer" style={{
-        padding: '1.25rem 1.5rem',
-        textAlign: 'center',
-        fontSize: '0.8rem',
-        color: '#475569',
-      }}>
-        <div style={{ fontWeight: 500 }}>
-          Tender Docs Analysis and Extraction Bot • Production Release v1.0.0
-        </div>
-        <div style={{ marginTop: '0.2rem', fontSize: '0.75rem', color: '#64748b' }}>
-          Constrained 12-parameter schema • Deterministic & LLM-Powered Evidence Verification • Audit-Grade Document Intelligence
-        </div>
-      </footer>
     </div>
   );
 };

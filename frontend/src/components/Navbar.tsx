@@ -15,9 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="glass-navbar" style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
+      width: '100%',
     }}>
       <div style={{
         maxWidth: '1280px',

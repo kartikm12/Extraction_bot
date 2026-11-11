@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typing import Dict, Optional
 import docx
@@ -95,7 +96,7 @@ class WordReportGenerator:
         
         run_title = title_para.add_run(authority_header)
         run_title.font.name = "Calibri"
-        run_title.font.size = Pt(13)
+        run_title.font.size = Pt(14)
         run_title.font.bold = True
         run_title.font.color.rgb = RGBColor(15, 23, 42)  # Dark Navy Slate
 
@@ -126,7 +127,7 @@ class WordReportGenerator:
             p.paragraph_format.space_after = Pt(0)
             for r in p.runs:
                 r.font.name = "Calibri"
-                r.font.size = Pt(10)
+                r.font.size = Pt(11)
                 r.font.bold = True
                 r.font.color.rgb = RGBColor(255, 255, 255)
 
@@ -154,7 +155,7 @@ class WordReportGenerator:
             p_param.paragraph_format.space_after = Pt(0)
             run_pname = p_param.add_run(display_name)
             run_pname.font.name = "Calibri"
-            run_pname.font.size = Pt(9.5)
+            run_pname.font.size = Pt(11)
             run_pname.font.bold = True
             run_pname.font.color.rgb = RGBColor(30, 41, 59)
 
@@ -166,16 +167,27 @@ class WordReportGenerator:
             if not param_obj or param_obj.extracted_value == "—" or param_obj.status == VerificationStatus.MISSING:
                 r_val = p_val.add_run("—")
                 r_val.font.name = "Calibri"
-                r_val.font.size = Pt(9.5)
+                r_val.font.size = Pt(11)
                 r_val.font.color.rgb = RGBColor(148, 163, 184)
             else:
+                is_reviewed = bool(param_obj.final_value or (param_obj.reviewer_decision in ["Approved", "Corrected"]))
                 val_text = param_obj.final_value if param_obj.final_value else param_obj.extracted_value
-                
-                # Check if conflict exists
-                if param_obj.conflict_status or param_obj.status == VerificationStatus.CONFLICT:
+
+                # If the parameter was reviewed or edited, strip any residual conflict preamble
+                if is_reviewed and isinstance(val_text, str):
+                    val_text = re.sub(
+                        r'^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?',
+                        '',
+                        val_text,
+                        flags=re.I
+                    ).strip()
+
+                # ONLY check if UNRESOLVED conflict exists (not reviewed or edited)
+                is_unresolved_conflict = not is_reviewed and (param_obj.conflict_status or param_obj.status == VerificationStatus.CONFLICT)
+                if is_unresolved_conflict:
                     r_warn = p_val.add_run("[CONFLICT DETECTED - REQUIRES REVIEW]\n")
                     r_warn.font.name = "Calibri"
-                    r_warn.font.size = Pt(8.5)
+                    r_warn.font.size = Pt(10)
                     r_warn.font.bold = True
                     r_warn.font.color.rgb = RGBColor(194, 65, 12)  # Amber-Red
                     
@@ -186,7 +198,7 @@ class WordReportGenerator:
                         p_val.add_run("\n")
                     r_val = p_val.add_run(line.strip())
                     r_val.font.name = "Calibri"
-                    r_val.font.size = Pt(9.0)
+                    r_val.font.size = Pt(11)
                     r_val.font.color.rgb = RGBColor(15, 23, 42)
 
         doc.save(str(output_path))

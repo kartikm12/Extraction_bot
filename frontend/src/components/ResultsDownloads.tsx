@@ -290,8 +290,14 @@ export const ResultsDownloads: React.FC<ResultsDownloadsProps> = ({
               {ORDERED_KEYS.map((key, idx) => {
                 const param = parameters[key];
                 const isMissing = !param || param.extracted_value === '—' || param.status === 'Missing from source';
-                const isConflict = param?.conflict_status || param?.status === 'Conflicting';
-                const val = param?.final_value || param?.extracted_value || '—';
+                const isReviewed = Boolean(param?.final_value || param?.reviewer_decision);
+                const isConflict = !isReviewed && (param?.conflict_status || param?.status === 'Conflicting');
+                let val = param?.final_value || param?.extracted_value || '—';
+
+                // If reviewed or edited, guarantee any leftover conflict preamble is removed
+                if (isReviewed && typeof val === 'string') {
+                  val = val.replace(/^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?/i, '').trim();
+                }
 
                 return (
                   <tr

@@ -50,14 +50,25 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
   const handleApprove = async (paramKey: ParameterKey) => {
     setSubmitting(true);
     try {
+      const param = parameters[paramKey];
+      let approvedVal = param?.final_value || param?.extracted_value || '';
+      if (approvedVal.startsWith('[CONFLICT')) {
+        if (param?.conflict_details && param.conflict_details[0]?.statements?.length > 0) {
+          approvedVal = param.conflict_details[0].statements[0].value;
+        } else {
+          approvedVal = approvedVal.replace(/^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?/i, '').trim();
+        }
+      }
       const items: ReviewSubmitItem[] = [{
         parameter_key: paramKey,
         action: 'approve',
+        corrected_value: approvedVal,
         reviewer_comment: reviewerComments[paramKey] || 'Approved by reviewer',
       }];
       await apiClient.submitReview(record.document_id, items);
       await apiClient.regenerateReports(record.document_id, false);
       onRefresh();
+      setSuccessMessage('✓ Approved & reports regenerated!');
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -87,32 +98,52 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
     }
   };
 
+  const handleSaveCorrectionWithValue = async (paramKey: ParameterKey, valueToUse: string, comment = 'Resolved by reviewer') => {
+    setSubmitting(true);
+    try {
+      const items: ReviewSubmitItem[] = [{
+        parameter_key: paramKey,
+        action: 'edit',
+        corrected_value: valueToUse.trim(),
+        reviewer_comment: comment,
+      }];
+      await apiClient.submitReview(record.document_id, items);
+      await apiClient.regenerateReports(record.document_id, false);
+      setEditingParam(null);
+      onRefresh();
+      setSuccessMessage('✓ Conflict resolved & reports regenerated!');
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } catch (err) {
+      alert('Error saving correction');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSaveCorrection = async (paramKey: ParameterKey) => {
     const newVal = correctedValues[paramKey];
     if (!newVal || !newVal.trim()) {
       alert('Please enter a corrected value.');
       return;
     }
+    await handleSaveCorrectionWithValue(paramKey, newVal, reviewerComments[paramKey] || 'Corrected by reviewer');
+  };
 
-    setSubmitting(true);
-    try {
-      const items: ReviewSubmitItem[] = [{
-        parameter_key: paramKey,
-        action: 'edit',
-        corrected_value: newVal.trim(),
-        reviewer_comment: reviewerComments[paramKey] || 'Corrected by reviewer',
-      }];
-      await apiClient.submitReview(record.document_id, items);
-      await apiClient.regenerateReports(record.document_id, false);
-      setEditingParam(null);
-      onRefresh();
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      alert('Error saving correction');
-    } finally {
-      setSubmitting(false);
+  const startEditParam = (param: ParameterExtraction) => {
+    setEditingParam(param.parameter_key);
+    let cleanInitial = param.final_value || param.extracted_value || '';
+    if (!param.final_value && cleanInitial.startsWith('[CONFLICT')) {
+      if (param.conflict_details && param.conflict_details[0]?.statements?.length > 0) {
+        cleanInitial = param.conflict_details[0].statements[0].value;
+      } else {
+        cleanInitial = cleanInitial.replace(/^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?/i, '').trim();
+      }
     }
+    setCorrectedValues({
+      ...correctedValues,
+      [param.parameter_key]: cleanInitial,
+    });
   };
 
   return (
@@ -232,6 +263,28 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                       }}>
                         Source Excerpt: "{stmt.source_excerpt}"
                       </div>
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => handleSaveCorrectionWithValue(
+                          conf.parameter_key as ParameterKey,
+                          stmt.value,
+                          `Resolved conflict by selecting Page ${stmt.source_page} value`
+                        )}
+                        className="glass-btn-secondary"
+                        style={{
+                          marginTop: '0.75rem',
+                          fontSize: '0.75rem',
+                          padding: '0.35rem 0.65rem',
+                          width: '100%',
+                          justifyContent: 'center',
+                          color: '#1e40af',
+                          fontWeight: 700,
+                        }}
+                      >
+                        <Check size={14} />
+                        Use Page {stmt.source_page} Value & Resolve Conflict
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -244,10 +297,16 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
       {/* 12 Parameters Review Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {Object.values(parameters).map((param) => {
-          const isConflict = param.conflict_status || param.status === 'Conflicting';
+          const isReviewed = Boolean(param.final_value || param.reviewer_decision);
+          const isConflict = !isReviewed && (param.conflict_status || param.status === 'Conflicting');
           const isMissing = param.status === 'Missing from source' || param.extracted_value === '—';
-          const isVerified = param.status === 'Verified';
+          const isVerified = param.status === 'Verified' || isReviewed;
           const isEditing = editingParam === param.parameter_key;
+
+          let displayVal = param.final_value || param.extracted_value || '—';
+          if (isReviewed && displayVal.startsWith('[CONFLICT')) {
+            displayVal = displayVal.replace(/^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?/i, '').trim();
+          }
 
           return (
             <div
@@ -364,7 +423,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                     marginTop: '0.35rem',
                     lineHeight: 1.55,
                   }}>
-                    {param.final_value || param.extracted_value}
+                    {displayVal}
                   </div>
                 )}
 
@@ -441,13 +500,7 @@ export const ExtractionReview: React.FC<ExtractionReviewProps> = ({
                 ) : (
                   <>
                     <button
-                      onClick={() => {
-                        setEditingParam(param.parameter_key);
-                        setCorrectedValues({
-                          ...correctedValues,
-                          [param.parameter_key]: param.final_value || param.extracted_value,
-                        });
-                      }}
+                      onClick={() => startEditParam(param)}
                       className="glass-btn-secondary"
                       style={{ padding: '0.4rem 0.85rem', fontSize: '0.825rem' }}
                     >

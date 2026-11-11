@@ -13,9 +13,11 @@ from backend.app.services.parser import ParsedDocument
 logger = logging.getLogger(__name__)
 
 GEMINI_MODELS = [
-    "gemini-3.5-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3.5-flash"
+    getattr(settings, "LLM_MODEL", "gemini-3-flash-preview") or "gemini-3-flash-preview",
+    "gemini-3-flash-preview",
+    "gemini-flash-latest",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-2.5-flash"
 ]
 
 EXTRACTION_SCHEMA = {
@@ -102,8 +104,10 @@ CRITICAL INSTRUCTIONS FOR EACH PARAMETER:
     - Validity duration (e.g., 'extends beyond 30 days after the warranty period' or 'valid for 60 days beyond warranty').
 
 12. indicative_value:
-    - Estimated tender value in ₹.
-    - If NOT specified, set value to '—' (em-dash) and is_specified to false. NEVER confuse bidder turnover criteria with tender indicative value.
+    - Estimated Tender Value / Budget / Approximate Cost / Estimated Contract Value (ECV) / Probable Amount of Contract (PAC).
+    - If specified, extract the exact monetary figure in ₹ (e.g., '₹1,50,00,000/-', '₹2.45 Crores', or 'Rs. 85.50 Lakhs').
+    - If NOT specified or omitted in the uploaded tender document, set value to 'Not specified in the tender document.' and is_specified to false.
+    - CRITICAL: NEVER confuse the bidder qualification turnover requirement (e.g., 'Turnover Certificate of not less than Rs.300.00 Lakhs') or EMD amount with the estimated budget / indicative value.
 
 EVIDENCE CITATION:
 - source_pages: List of 1-based page numbers where the text was found.
@@ -113,7 +117,7 @@ EVIDENCE CITATION:
 class GeminiExtractionService:
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY
-        self.timeout = float(settings.LLM_TIMEOUT_SECONDS or 60.0)
+        self.timeout = float(settings.LLM_TIMEOUT_SECONDS or 90.0)
 
     def is_available(self) -> bool:
         return bool(self.api_key and self.api_key.strip())
@@ -205,10 +209,13 @@ class GeminiExtractionService:
                 source_pages = [1]
             source_pages = sorted(list(set(int(p) for p in source_pages if isinstance(p, (int, str)) and str(p).isdigit())))
 
-            if not is_specified or val in ["—", "-", "", "None", "null"]:
+            if not is_specified or val in ["—", "-", "", "None", "null", "not specified", "not specified in the tender document."]:
                 if key == ParameterKey.CONSORTIUM:
                     extracted_val = "Not specified in the uploaded document. The tender does not explicitly state whether consortium/JV participation is permitted."
                     status = VerificationStatus.VERIFIED
+                elif key == ParameterKey.INDICATIVE_VALUE:
+                    extracted_val = "Not specified in the tender document."
+                    status = VerificationStatus.MISSING
                 else:
                     extracted_val = "—"
                     status = VerificationStatus.MISSING

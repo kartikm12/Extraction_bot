@@ -219,13 +219,38 @@ def submit_review(document_id: str, submission: ReviewSubmission):
             if action == "approve":
                 param.status = VerificationStatus.VERIFIED
                 param.reviewer_decision = "Approved"
-                param.final_value = param.extracted_value
                 param.review_required = False
+                param.conflict_status = False
+                param.review_reason = None
+                param.conflict_details = []
+                param.confidence_indicator = "High"
+                param.confidence_score = 1.0
+
+                clean_corr = (item.corrected_value or "").strip()
+                if clean_corr:
+                    param.final_value = clean_corr
+                elif param.final_value and not param.final_value.startswith("[CONFLICT"):
+                    pass
+                elif param.extracted_value and param.extracted_value.startswith("[CONFLICT"):
+                    if param.conflict_details and len(param.conflict_details) > 0 and param.conflict_details[0].statements:
+                        param.final_value = param.conflict_details[0].statements[0].value
+                    else:
+                        param.final_value = re.sub(r'^\[CONFLICT[ -][^\]]+\]\s*(?:Multiple contradictory values found:\s*)?', '', param.extracted_value).strip()
+                else:
+                    param.final_value = param.extracted_value
+
             elif action == "edit":
                 param.status = VerificationStatus.CORRECTED
                 param.reviewer_decision = "Corrected"
-                param.final_value = item.corrected_value or param.extracted_value
+                clean_corr = (item.corrected_value or "").strip()
+                param.final_value = clean_corr if clean_corr else param.extracted_value
                 param.review_required = False
+                param.conflict_status = False
+                param.review_reason = None
+                param.conflict_details = []
+                param.confidence_indicator = "High"
+                param.confidence_score = 1.0
+
             elif action == "flag":
                 param.status = VerificationStatus.NEEDS_REVIEW
                 param.reviewer_decision = "Flagged"
@@ -233,6 +258,13 @@ def submit_review(document_id: str, submission: ReviewSubmission):
 
             param.reviewer_comment = item.reviewer_comment
             param.reviewed_at = datetime.utcnow()
+
+            # Mark any matching conflict in record.conflicts as resolved
+            if action in ["approve", "edit"]:
+                for conf in record.conflicts:
+                    if conf.parameter_key == item.parameter_key:
+                        conf.is_resolved = True
+                        conf.resolution_note = f"Resolved by reviewer ({action}): {param.final_value}"
 
             log_audit_action(
                 document_id=document_id,
@@ -243,13 +275,40 @@ def submit_review(document_id: str, submission: ReviewSubmission):
                 reviewer_comment=item.reviewer_comment
             )
 
+    # Filter out resolved conflicts from active conflict list
+    record.conflicts = [c for c in record.conflicts if not c.is_resolved]
+    record.has_conflicts = len(record.conflicts) > 0 or any(p.conflict_status for p in record.parameters.values())
+
     # Re-evaluate document level verification status
-    unresolved_conflicts = any(p.status == VerificationStatus.CONFLICT for p in record.parameters.values())
+    unresolved_conflicts = record.has_conflicts
     unresolved_reviews = any(p.status in [VerificationStatus.NEEDS_REVIEW, VerificationStatus.OCR_FAILURE] for p in record.parameters.values())
     
     record.requires_human_review = unresolved_conflicts or unresolved_reviews
-    record.is_fully_verified = not record.requires_human_review
+    record.is_fully_verified = not record.requires_human_review and not record.has_conflicts
+    record.updated_at = datetime.utcnow()
     save_document(record)
+
+    # Regenerate Word and Excel reports immediately with the resolved parameters
+    try:
+        word_path = docx_generator.generate_report(
+            document_id=record.document_id,
+            original_filename=record.original_filename,
+            parameters=record.parameters
+        )
+        xlsx_path, json_path = xlsx_generator.generate_logs(
+            document_id=record.document_id,
+            original_filename=record.original_filename,
+            parameters=record.parameters,
+            conflicts=record.conflicts,
+            ocr_warnings=[],
+            created_at=record.created_at
+        )
+        record.word_report_path = str(word_path)
+        record.verification_xlsx_path = str(xlsx_path)
+        record.audit_json_path = str(json_path)
+        save_document(record)
+    except Exception as e:
+        logger.warning(f"Error re-generating report files on review: {e}")
 
     broadcast_sync({
         "type": "tender_reviewed",

@@ -74,18 +74,32 @@ class VerificationLogGenerator:
             param = parameters.get(key.value)
             display_name = PARAMETER_DISPLAY_NAMES[key]
             
-            init_val = param.extracted_value if param else "—"
-            final_val = param.final_value or (init_val if param and param.status != VerificationStatus.CONFLICT else "—")
-            source_pages_str = ", ".join(map(str, param.source_pages)) if param and param.source_pages else "None"
-            excerpt = param.exact_supporting_text if param else ""
-            conf_ind = param.confidence_indicator if param else "Low"
-            status_val = param.status.value if param else VerificationStatus.NEEDS_REVIEW.value
-            missing_val = "Yes (Missing)" if param and param.status == VerificationStatus.MISSING else "No"
-            conflict_val = "Yes (Conflicting)" if param and param.conflict_status else "No"
-            conflict_desc = param.review_reason if param and param.conflict_status else "None"
-            ocr_warn = param.ocr_warning or "None"
-            rev_comment = param.reviewer_comment or "None"
-            rev_decision = f"{param.reviewer_decision} ({param.reviewed_at.isoformat()})" if param and param.reviewer_decision and param.reviewed_at else "Pending"
+            if param:
+                init_val = param.extracted_value or "—"
+                final_val = param.final_value or (init_val if param.status != VerificationStatus.CONFLICT else "—")
+                source_pages_str = ", ".join(map(str, param.source_pages)) if param.source_pages else "None"
+                excerpt = param.exact_supporting_text or ""
+                conf_ind = param.confidence_indicator or "Low"
+                status_val = param.status.value if hasattr(param.status, "value") else str(param.status)
+                missing_val = "Yes (Missing)" if param.status == VerificationStatus.MISSING else "No"
+                conflict_val = "Yes (Conflicting)" if param.conflict_status else "No"
+                conflict_desc = param.review_reason if param.conflict_status else "None"
+                ocr_warn = param.ocr_warning or "None"
+                rev_comment = param.reviewer_comment or "None"
+                rev_decision = f"{param.reviewer_decision} ({param.reviewed_at.isoformat()})" if param.reviewer_decision and param.reviewed_at else "Pending"
+            else:
+                init_val = "—"
+                final_val = "—"
+                source_pages_str = "None"
+                excerpt = ""
+                conf_ind = "Low"
+                status_val = VerificationStatus.NEEDS_REVIEW.value
+                missing_val = "No"
+                conflict_val = "No"
+                conflict_desc = "None"
+                ocr_warn = "None"
+                rev_comment = "None"
+                rev_decision = "Pending"
 
             row_data = [
                 document_id, original_filename, timestamp_str, display_name,

@@ -304,7 +304,7 @@ class ConflictDetectionEngine:
 
         for page in doc.pages:
             text = page.text
-            matches = re.finditer(r'(?:Estimated\s*(?:Tender|Contract|Procurement)?\s*Value|Estimated\s*Cost)\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore))?)', text, re.I)
+            matches = re.finditer(r'(?:Estimated\s*(?:Tender|Contract|Procurement|Project|Work)?\s*(?:Value|Cost|Budget|Amount)|Indicative\s*(?:Value|Cost|Budget)|Tender\s*(?:Value|Cost|Budget)|ECV|Approximate\s*(?:Value|Cost|Budget|Amount)|Probable\s*Amount\s*of\s*Contract|PAC|Amount\s*put\s*to\s*Tender)\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakhs?|Crores?|Million|Billion))?)', text, re.I)
             for m in matches:
                 v = m.group(1).strip()
                 if v not in seen_vals:

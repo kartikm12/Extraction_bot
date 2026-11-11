@@ -213,7 +213,7 @@ class ExtractionEngine:
                         )
 
                     # 11. Estimated / Indicative Value
-                    if any(term in k for term in ['estimated tender value', 'estimated cost', 'indicative value', 'tender value', 'approximate value']):
+                    if any(term in k for term in ['estimated tender value', 'estimated contract value', 'estimated value', 'estimated cost', 'estimated budget', 'tender budget', 'project budget', 'indicative value', 'tender value', 'approximate value', 'approximate cost', 'approximate budget', 'ecv', 'pac', 'amount put to tender', 'probable amount of contract']):
                         if re.search(r'[\d₹$]', v) and not re.search(r'turnover|bid price|unit price', v, re.I):
                             candidates[ParameterKey.INDICATIVE_VALUE].append(
                                 CandidateExtraction(ParameterKey.INDICATIVE_VALUE, v, page.page_number, f"{k_raw}: {v_raw}", "Tender Fact Sheet Table", 0.96)
@@ -971,7 +971,7 @@ class ExtractionEngine:
             )
 
         # 12. Indicative Value
-        val_matches = re.finditer(r'(?:Estimated\s*(?:Tender|Contract|Procurement|Project)?\s*Value|Estimated\s*Cost|Indicative\s*Value|Tender\s*Value)\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Crore))?)', text, re.I)
+        val_matches = re.finditer(r'(?:Estimated\s*(?:Tender|Contract|Procurement|Project|Work)?\s*(?:Value|Cost|Budget|Amount)|Indicative\s*(?:Value|Cost|Budget)|Tender\s*(?:Value|Cost|Budget)|ECV|Approximate\s*(?:Value|Cost|Budget|Amount)|Probable\s*Amount\s*of\s*Contract|PAC|Amount\s*put\s*to\s*Tender)\s*[:\.\s-]*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d+)?(?:\s*(?:Lakhs?|Crores?|Million|Billion))?)', text, re.I)
         for m in val_matches:
             val = m.group(1).strip()
             digits = re.sub(r'[^\d]', '', val)
@@ -1016,6 +1016,22 @@ class ExtractionEngine:
                     conflict_status=False,
                     review_required=False,
                     review_reason="The tender document does not explicitly state whether consortium/JV participation is permitted."
+                )
+
+            if key == ParameterKey.INDICATIVE_VALUE:
+                return ParameterExtraction(
+                    parameter_key=key,
+                    display_name=display_name,
+                    extracted_value="Not specified in the tender document.",
+                    source_pages=[],
+                    exact_supporting_text="",
+                    section_or_table=None,
+                    status=VerificationStatus.MISSING,
+                    confidence_score=1.0,
+                    confidence_indicator="High",
+                    conflict_status=False,
+                    review_required=False,
+                    review_reason="The tender document does not disclose an estimated contract value / budget."
                 )
 
             return ParameterExtraction(
@@ -1064,6 +1080,22 @@ class ExtractionEngine:
                     conflict_status=False,
                     review_required=False,
                     review_reason="The tender document does not explicitly state whether consortium/JV participation is permitted."
+                )
+
+            if key == ParameterKey.INDICATIVE_VALUE:
+                return ParameterExtraction(
+                    parameter_key=key,
+                    display_name=display_name,
+                    extracted_value="Not specified in the tender document.",
+                    source_pages=[],
+                    exact_supporting_text="",
+                    section_or_table=None,
+                    status=VerificationStatus.MISSING,
+                    confidence_score=1.0,
+                    confidence_indicator="High",
+                    conflict_status=False,
+                    review_required=False,
+                    review_reason="The tender document does not disclose an estimated contract value / budget."
                 )
 
             return ParameterExtraction(
