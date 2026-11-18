@@ -68,9 +68,16 @@ export const App: React.FC = () => {
 
     const connectWebSocket = () => {
       try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.port === '5173' ? 'localhost:8000' : window.location.host;
-        const wsUrl = `${protocol}//${host}/api/ws`;
+        let wsUrl: string;
+        if (import.meta.env.VITE_API_URL) {
+          const backendUrl = new URL(import.meta.env.VITE_API_URL, window.location.origin);
+          const wsProto = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+          wsUrl = `${wsProto}//${backendUrl.host}/api/ws`;
+        } else {
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const host = window.location.port === '5173' ? 'localhost:8000' : window.location.host;
+          wsUrl = `${protocol}//${host}/api/ws`;
+        }
 
         ws = new WebSocket(wsUrl);
 
